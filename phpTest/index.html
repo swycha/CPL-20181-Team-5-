@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en", "ko">
+<head>
+  <title>Bootstrap Case</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+  <!--Load the AJAX API-->
+   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+   <script type="text/javascript">
+
+     // Load the Visualization API and the corechart package.
+     google.charts.load('current', {'packages':['corechart']});
+
+     // Set a callback to run when the Google Visualization API is loaded.
+     google.charts.setOnLoadCallback(drawChart);
+
+     // Callback that creates and populates a data table,
+     // instantiates the pie chart, passes in the data and
+     // draws it.
+     function drawChart() {
+
+       // Create the data table.
+       var data = new google.visualization.DataTable();
+       data.addColumn('string', 'Topping');
+       data.addColumn('number', 'Slices');
+       data.addRows([
+         ['Mushrooms', 3],
+         ['Onions', 1],
+         ['Olives', 1],
+         ['Zucchini', 1],
+         ['Pepperoni', 2]
+       ]);
+
+       // Set chart options
+       var options = {'title':'How Much Pizza I Ate Last Night',
+                      'width':400,
+                      'height':300};
+
+       // Instantiate and draw our chart, passing in some options.
+       var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+       chart.draw(data, options);
+     }
+   </script>
+</head>
+<body>
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Cartax</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li class="active"><a href="#">Home</a></li>
+      <li><a href="#">운행누적</a></li>
+      <li><a href="#">운행시간</a></li>
+      <li><a href="#">목적</a></li>
+      <li><a href="#">출발도착</a></li>
+      <li><a href="#">직원</a></li>
+      <li><a href="#">지출</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+
+<!--Div that will hold the pie chart-->
+    <div id="chart_div"></div>
+
+</body>
+</html>
