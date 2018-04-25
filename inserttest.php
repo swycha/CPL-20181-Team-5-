@@ -24,8 +24,11 @@ if($conn2->connect_error){
 die("message: ".$conn2->connect_error);
 }
 
-
-$sql = "select startDate from drivingLog";
+$conn->set_charset("utf8");
+$conn2->set_charset("utf8");
+    
+    
+$sql = "select * from drivingLog";
 $result=$conn2->query($sql);
 
 if(!$result){
@@ -39,8 +42,20 @@ $num=$result->num_rows;
 
 if($result->num_rows>0){
 	while($row=$result->fetch_assoc()){
-		$sd = $row["startDate"];
-		$sql3="insert into drivinglog values(\"".$sd."\",null,null,null,null,null,null,null)";
+        $emp_name=$row["name"];
+        $dep_name=$row["departmentName"];
+		$startdate = $row["startDate"];
+        $starttime = $row["startTime"];
+        $stoptime=$row["stopTime"];
+        $purpose=$row["purpose"];
+        $startlong=$row["startLongitude"];
+        $startlang=$row["startLatitude"];
+        $stoplong=$row["stopLongitude"];
+        $stoplang=$row["stopLatitude"];
+        
+		$sql3="insert into drivinglog values(\"".$startdate."\",\"".$starttime."\",\"".$stoptime."\",\"".$purpose."\",\"".$startlong."\",\"".$startlang."\",\"".$stoplong."\",\"".$stoplang."\",\"".$emp_name."\",\"".$dep_name."\",".date('w',strtotime($startdate)).")";
+        
+        //echo($sql3);
 		$result3=$conn->query($sql3);
 		if(!$result3){
 			trigger_error('Invalidi query : '.$conn->error);
