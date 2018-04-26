@@ -1,0 +1,104 @@
+<html>
+<head>
+  <title>Google Chart</title>
+  <script
+  src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+  <script type="text/javascript"
+  src = "https://www.gstatic.com/charts/loader.js"></script>
+
+    
+  <script type="text/javascript">
+  $(document).ready(function() {
+
+    $.ajax({
+
+      url : "jsontest.php",
+      dataType : "JSON",
+      success : function(result) {
+        google.charts.load('current', {
+          'packages' : [ 'corechart']
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawChart(result);
+        });
+      },
+        fail:function(){
+            alert("chart load fail");
+        }
+    });
+    });
+
+    function drawChart(result) {
+
+       
+  
+
+        var sun=0,mon=0,tue=0,wed=0,thu=0,fri=0,sat=0;
+      //  var dataArray=[];
+        $.each(result, function(i,obj){
+            
+            switch(parseInt(obj.weeknum)){
+                case 0:
+                    sun+=parseInt(obj.tottime)/60;
+                    break;
+                case 1:
+                    mon+=parseInt(obj.tottime)/60;
+                    break;
+                case 2:
+                    tue+=parseInt(obj.tottime)/60;
+                    break;
+                case 3:
+                    wed+=parseInt(obj.tottime)/60;
+                    break;
+                case 4:
+                    thu+=parseInt(obj.tottime)/60;
+                    break;
+                case 5:
+                    fri+=parseInt(obj.tottime)/60;
+                    break;
+                case 6:
+                    sat+=parseInt(obj.tottime)/60;
+                    break;
+            }
+        });
+        
+        var str = "[['요일', '운행시간'],['SUN', "+sun+"],['MON', "+mon+"],['TUE', "+tue+"]],['WED', "+wed+"],['THU', "+thu+"],['FRI', "+fri+"],['SAT', "+sat+"]]";
+        var data = google.visualization.arrayToDataTable([
+            ["요일", "운행시간(분)",{ role: 'annotation' }],
+            ["SUN", sun,sun],
+            ["MON", mon,mon],
+            ["TUE", tue,tue],
+            ["WED", wed,wed],
+            ["THU", thu,thu],
+            ["FRI", fri,fri],
+            ["SAT", sat,sat]
+        ]);
+        
+       // 그래프 옵션
+       var options = {
+          width : 1100, // 가로 px
+          height : 200, // 세로 px
+          bar : {
+             groupWidth : '50%' // 그래프 너비 설정 %
+          },
+          legend : {
+             position : 'none' // 항목 표시 여부 (현재 설정은 안함)
+          }
+       };
+
+       var chart = new google.visualization.ColumnChart(document.getElementById("chart_div"));
+        document.getElementById("charttitle").innerHTML="요일별 운행시간";
+       chart.draw(data, options);
+    }
+
+ 
+
+  </script>
+    </head>
+    <body>
+        <p id="charttitle" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+        <div id = "chart_div"></div>
+        
+    </body>
+</html>
