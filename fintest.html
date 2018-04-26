@@ -7,6 +7,7 @@
   <script type="text/javascript"
   src = "https://www.gstatic.com/charts/loader.js"></script>
 
+    
   <script type="text/javascript">
   $(document).ready(function() {
 
@@ -15,7 +16,6 @@
       url : "jsontest.php",
       dataType : "JSON",
       success : function(result) {
-          alert("success");
         google.charts.load('current', {
           'packages' : [ 'corechart']
         });
@@ -24,7 +24,7 @@
         });
       },
         fail:function(){
-            alert("fail");
+            alert("chart load fail");
         }
     });
     });
@@ -32,24 +32,13 @@
     function drawChart(result) {
 
        
-       // 차트 데이터 설정
-/*       var data = google.visualization.arrayToDataTable([
-            ['요일', '운행시간'], // 항목 정의
-            ['SUN', 1],
-            ['MON', 2],
-            ['TUE', 3],
-            ['WED', 4],
-            ['THU', 5],
-            ['FRI', 4],
-            ['SAT', 1],
-	   ]);*/
+  
 
         var sun=0,mon=0,tue=0,wed=0,thu=0,fri=0,sat=0;
       //  var dataArray=[];
         $.each(result, function(i,obj){
             
             switch(parseInt(obj.weeknum)){
-                    //document.getElementById("test").innerHTML+=parseInt(obj.tottime)+" "+parseInt(obj.weeknum);
                 case 0:
                     sun+=parseInt(obj.tottime)/60;
                     break;
@@ -72,20 +61,9 @@
                     sat+=parseInt(obj.tottime)/60;
                     break;
             }
-            //dataArray.push([parseInt(obj.tottime), parseInt(obj.weeknum)]);
-            
-            //document.getElementById("test").innerHTML+=parseInt(obj.tottime)+" "+parseInt(obj.weeknum);
         });
-//        dataArray.push(['SUN', sun]);
-//        dataArray.push(['MON', mon]);
-//        dataArray.push(['TUE', tue]);
-//        dataArray.push(['WED', wed]);
-//        dataArray.push(['THU', thu]);
-//        dataArray.push(['FRI', fri]);
-//        dataArray.push(['SAT', sat]);
         
         var str = "[['요일', '운행시간'],['SUN', "+sun+"],['MON', "+mon+"],['TUE', "+tue+"]],['WED', "+wed+"],['THU', "+thu+"],['FRI', "+fri+"],['SAT', "+sat+"]]";
-        //var data = google.visualization.arrayToDataTable(str);
         var data = google.visualization.arrayToDataTable([
             ["요일", "운행시간(분)",{ role: 'annotation' }],
             ["SUN", sun,sun],
@@ -96,9 +74,6 @@
             ["FRI", fri,fri],
             ["SAT", sat,sat]
         ]);
-        //document.getElementById("test").innerHTML=str;
-       // data.addRows(dataArray);
-       // document.getElementById("test").innerHTML=data[0];
         
        // 그래프 옵션
        var options = {
@@ -117,41 +92,12 @@
        chart.draw(data, options);
     }
 
-   // google.charts.load('current', {packages: ['corechart', 'bar']});
-    /*google.charts.setOnLoadCallback(drawStacked);
-
-    function drawStacked() {
-      // 차트 데이터 설정
-       var data = google.visualization.arrayToDataTable([
-          ['요일', '업무용', '비업무용', '출퇴근용'], // 항목 정의
-        ['SUN', 1, 2, 3],
-          ['MON', 1, 2, 3],
-        ['TUE', 3, 2, 3],
-        ['WED', 4, 2, 3],
-        ['THU', 5, 2, 3],
-        ['FRI', 4, 2, 3],
-        ['SAT', 1, 2, 3],
-
-       ]);
-
-      // 그래프 옵션
-      var options = {
-        width : 1100, // 가로 px
-        height : 200, // 세로 px
-        bar : {
-          groupWidth : '50%' // 그래프 너비 설정 %
-        },
-        isStacked : true // 그래프 쌓기(스택), 기본값은 false
-      };
-
-          var chart = new google.visualization.ColumnChart(document.getElementById('chart_div_stack'));
-          chart.draw(data, options);
-    }*/
+ 
 
   </script>
     </head>
     <body>
-        <p id="charttitle" style="margin: 20px;"></p>
+        <p id="charttitle" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
         <div id = "chart_div">
         </div>
         
