@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html >
+<head>
+  <meta charset="UTF-8">
+  <title>Cartax</title>
+  <link rel='stylesheet prefetch' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
+<link rel='stylesheet prefetch' href='https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css'>
+<link rel='stylesheet prefetch' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,200,300,700'>
+
+   <link rel="stylesheet" href="css/style.css">
+
+
+<!-- for google chart-->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+   <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+   <script type="text/javascript">
+    google.charts.load('current', {packages: ['map']});
+   </script>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
+  <script>
+    $(document).ready(function(){
+        
+        $("#tab0").click(function(){
+            $("#bottom").load("drivingcum.html");
+        });
+        $("#tab1").click(function(){
+            //document.getElementById("waiting").innerHTML="차트를 불러오는 중입니다.";
+            alert("시간별 차트를 불러오는 중입니다.");
+            $("#bottom").load("drivingtime.html");
+            //document.getElementById("waiting").innerHTML="";
+        });
+        $("#tab2").click(function(){
+            alert("목적별 차트를 불러오는 중입니다.");
+            $("#bottom").load("drivingpurpose.html");
+        });
+        $("#tab3").click(function(){
+            alert("출도착 차트를 불러오는 중입니다.");
+            $("#bottom").load("drivingstds.html");
+        });
+        $("#tab4").click(function(){
+            $("#bottom").load("drivingemp.html");
+        });
+        $("#tab5").click(function(){
+            $("#bottom").load("drivingcost.html");
+        });
+        
+    });
+
+</script>
+
+
+   <!-- for chart1-->
+
+
+</head>
+
+<body>
+  <div class="container">
+<section id="fancyTabWidget" class="tabs t-tabs">
+        <ul class="nav nav-tabs fancyTabs" role="tablist">
+
+            <li class="tab fancyTab active">
+                <div class="arrow-down"><div class="arrow-down-inner"></div></div>
+                <a href="#" id="tab0" role="tab" data-toggle="tab">
+                    <span class="fa fa-car"></span>
+                    <span class="hidden-xs">운행누적</span>
+                </a>
+                <div class="whiteBlock"></div>
+            </li>
+            <li class="tab fancyTab">
+                <div class="arrow-down"><div class="arrow-down-inner"></div></div>
+                <a href="#" id="tab1" role="tab" data-toggle="tab">
+                    <span class="fa fa-clock-o"></span>
+                    <span class="hidden-cl">운행시간</span>
+                </a>
+                <div class="whiteBlock"></div>
+            </li>
+            <li class="tab fancyTab">
+                <div class="arrow-down"><div class="arrow-down-inner"></div></div>
+                <a href="#" id="tab2" role="tab" data-toggle="tab">
+                    <span class="fa fa-crosshairs"></span>
+                    <span class="hidden-xs">운행목적</span>
+                </a>
+                <div class="whiteBlock"></div>
+            </li>
+            <li class="tab fancyTab">
+                <div class="arrow-down"><div class="arrow-down-inner"></div></div>
+                <a href="#" id="tab3" role="tab" data-toggle="tab">
+                    <span class="fa fa-map-marker"></span>
+                    <span class="hidden-xs">출발도착지</span>
+                </a>
+                <div class="whiteBlock"></div>
+            </li>
+            <li class="tab fancyTab">
+                <div class="arrow-down"><div class="arrow-down-inner"></div></div>
+                <a href="#" id="tab4" role="tab" data-toggle="tab">
+                    <span class="fa fa-user"></span>
+                    <span class="hidden-xs">직원</span>
+                </a>
+                <div class="whiteBlock"></div>
+            </li>
+            <li class="tab fancyTab">
+                <div class="arrow-down"><div class="arrow-down-inner"></div></div>
+                <a href="#" id="tab5" role="tab" data-toggle="tab">
+                    <span class="fa fa-dollar"></span>
+                    <span class="hidden-xs">비용</span>
+                </a>
+                <div class="whiteBlock"></div>
+            </li>
+
+
+        </ul>
+
+    </section>
+      <div id="myTabContent" class="tab-content fancyTabContent" aria-live="polite">
+          <p id="waiting"></p>
+        <div id="bottom">
+        </div> 
+      </div>
+</div>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'></script>
+
+    <script src="js/index.js"></script>
+
+</body>
+</html>

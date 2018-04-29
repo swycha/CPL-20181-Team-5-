@@ -1,0 +1,92 @@
+<html>
+<head>
+  <title>Google Chart</title>
+  <script
+  src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+  <script type="text/javascript"
+  src = "https://www.gstatic.com/charts/loader.js"></script>
+
+    
+  <script type="text/javascript">
+  $(document).ready(function() {
+
+    $.ajax({
+
+      url : "purposejson.php",
+      dataType : "JSON",
+      success : function(result) {
+        google.charts.load('current', {
+          'packages' : [ 'corechart']
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawChart(result);
+        });
+      },
+        fail:function(){
+            alert("chart load fail");
+        }
+    });
+    });
+
+    function drawChart(result) {
+
+        
+        var time=[0,0,0,0];
+      
+        $.each(result, function(i,obj){
+            //document.getElementById("fortest").innerHTML+=obj.purpose;
+            switch(obj.purpose){
+                case "a":
+                    time[0]+=1;
+                    break;
+                case "e":
+                    time[1]+=1;
+                    break;
+                case "g":
+                    time[2]+=1;
+                    break;
+                default:
+                    time[3]+=1;
+                    
+            }
+        });
+        
+        
+  
+        var data = google.visualization.arrayToDataTable([
+            ["목적", "횟수",{ role: 'annotation' }],
+            ["일반 업무", time[0],time[0]],
+            ["출/퇴근", time[1],time[1]],
+            ["비업무", time[2],time[2]],
+            ["etc", time[3],time[3]]
+        ]);
+        
+       // 그래프 옵션
+       var options = {
+          width : 1100, // 가로 px
+          height : 200, // 세로 px
+          bar : {
+             groupWidth : '50%' // 그래프 너비 설정 %
+          },
+          legend : {
+             position : 'none' // 항목 표시 여부 (현재 설정은 안함)
+          }
+       };
+
+       var chart = new google.visualization.ColumnChart(document.getElementById("chart_div"));
+        document.getElementById("charttitle").innerHTML="목적별 운행횟수";
+       chart.draw(data, options);
+    }
+
+ 
+
+  </script>
+    </head>
+    <body>
+        <p id="fortest"></p>
+        <p id="charttitle" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+        <div id = "chart_div"></div>
+        
+    </body>
+</html>
