@@ -1,0 +1,81 @@
+<html>
+<head>
+  <title>Google Chart</title>
+  <script
+  src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+  <script type="text/javascript"
+  src = "https://www.gstatic.com/charts/loader.js"></script>
+
+    
+  <script type="text/javascript">
+  $(document).ready(function() {
+
+    $.ajax({
+
+      url : "cumjson.php",
+      dataType : "JSON",
+      success : function(result) {
+        google.charts.load('current', {
+          'packages' : [ 'corechart']
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawChart(result);
+        });
+      },
+        fail:function(){
+            alert("chart load fail");
+        }
+    });
+    });
+
+    function drawChart(result) {
+
+        var dis=[0,0,0,0,0,0,0];
+        var weeknum;
+        $.each(result, function(i,obj){
+            weeknum = new Date(obj.startDate).getDay();
+            if(parseInt(obj.distance)>=0)
+                dis[parseInt(weeknum)]+=parseInt(obj.distance);
+        });
+        
+        
+        var data = google.visualization.arrayToDataTable([
+            ["요일", "횟수",{ role: 'annotation' }],
+            ["SUN",dis[0],dis[0]], 
+            ["MON",dis[1],dis[1]],
+            ["TUE",dis[2],dis[2]],
+            ["WED",dis[3],dis[3]],
+            ["THU",dis[4],dis[4]],
+            ["FRI",dis[5],dis[5]],
+            ["SAT",dis[6],dis[6]]
+        ]);
+        
+       // 그래프 옵션
+       var options = {
+          width : 1100, // 가로 px
+          height : 200, // 세로 px
+          bar : {
+             groupWidth : '50%' // 그래프 너비 설정 %
+          },
+          legend : {
+             position : 'none' // 항목 표시 여부 (현재 설정은 안함)
+          }
+       };
+
+       var chart = new google.visualization.ColumnChart(document.getElementById("chart_div"));
+        document.getElementById("charttitle").innerHTML="누적 운행거리";
+       chart.draw(data, options);
+    }
+
+ 
+
+  </script>
+    </head>
+    <body>
+        <p id="fortest"></p>
+        <p id="charttitle" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+        <div id = "chart_div"></div>
+        
+    </body>
+</html>
