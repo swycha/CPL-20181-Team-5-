@@ -1,0 +1,457 @@
+<html>
+<head>
+
+  <meta charset="utf-8">
+  <h1>전년도 데이터</h1>
+  <script
+  src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+  <script type="text/javascript"
+  src = "https://www.gstatic.com/charts/loader.js"></script>
+
+  <script type="text/javascript">
+
+  $(document).ready(function() {
+
+    $.ajax({
+      url : "ParsedData.php",
+      dataType : "JSON",
+      success : function(result) {
+
+        google.charts.load('current', {
+          'packages' : [ 'corechart']
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawDrivingCumChart(result);
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawDrivingTimeChart(result);
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawDrivingPurposeChart(result);
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawCostChart(result);
+        });
+      },
+        fail:function(){
+            alert("chart load fail");
+        }
+    });
+    });
+
+        function drawDrivingCumChart(result) {
+
+            var dis=[0,0,0,0,0,0,0];
+            var weeknum;
+            var year;
+            var date;
+            var thisyear = new Date().getFullYear();
+
+            $.each(result, function(i,obj){
+
+                date = new Date(obj.startDate);
+                year = date.getFullYear();
+
+                if(year == (thisyear-1)) {
+
+                  weeknum = date.getDay();
+
+                  if(parseInt(obj.distance)>=0)
+                      dis[parseInt(weeknum)]+=parseInt(obj.distance);
+                  }
+            });
+
+            var data = google.visualization.arrayToDataTable([
+                ["요일", "횟수",{ role: 'annotation' }],
+                ["SUN",dis[0],dis[0]],
+                ["MON",dis[1],dis[1]],
+                ["TUE",dis[2],dis[2]],
+                ["WED",dis[3],dis[3]],
+                ["THU",dis[4],dis[4]],
+                ["FRI",dis[5],dis[5]],
+                ["SAT",dis[6],dis[6]]
+            ]);
+
+           // 그래프 옵션
+           var options = {
+              width : 1100, // 가로 px
+              height : 200, // 세로 px
+              bar : {
+                 groupWidth : '50%' // 그래프 너비 설정 %
+              },
+              legend : {
+                 position : 'none' // 항목 표시 여부 (현재 설정은 안함)
+              }
+           };
+
+           var chart = new google.visualization.ColumnChart(document.getElementById("chart_div"));
+            document.getElementById("charttitle").innerHTML="운행 거리";
+           chart.draw(data, options);
+        }
+
+    function drawDrivingTimeChart(result) {
+
+        //var sun=0,mon=0,tue=0,wed=0,thu=0,fri=0,sat=0;
+        var day=[0,0,0,0,0,0,0];
+        var cumtime=[];
+        var weeknum;
+
+        var year;
+        var date;
+        var thisyear = new Date().getFullYear();
+
+        $.each(result, function(i,obj){
+
+          date = new Date(obj.startDate);
+          year = date.getFullYear();
+
+        if(year == (thisyear-1)) {
+
+            if(parseInt(obj.distance)>=0){
+                weeknum = new Date(obj.startDate).getDay();
+                day[parseInt(weeknum)]+=parseInt(obj.tottime);
+            }
+          }
+
+        });
+
+        var i;
+        for(i=0;i<7;i++){
+            cumtime.push(parseInt(day[i]/3600)+"시간 "+parseInt((day[i]-parseInt(day[i]/3600)*3600)/60)+"분");
+        }
+
+        var data = google.visualization.arrayToDataTable([
+            ["요일", "운행시간(분)",{ role: 'annotation' }],
+            ["SUN", day[0],cumtime[0]],
+            ["MON", day[1],cumtime[1]],
+            ["TUE", day[2],cumtime[2]],
+            ["WED", day[3],cumtime[3]],
+            ["THU", day[4],cumtime[4]],
+            ["FRI", day[5],cumtime[5]],
+            ["SAT", day[6],cumtime[6]]
+        ]);
+
+       // 그래프 옵션
+       var options = {
+          width : 1100, // 가로 px
+          height : 200, // 세로 px
+          bar : {
+             groupWidth : '50%' // 그래프 너비 설정 %
+          },
+          legend : {
+             position : 'none' // 항목 표시 여부 (현재 설정은 안함)
+          }
+       };
+
+       var chart = new google.visualization.ColumnChart(document.getElementById("chart_div2"));
+        document.getElementById("charttitle2").innerHTML="운행 시간";
+       chart.draw(data, options);
+    }
+
+    function drawDrivingPurposeChart(result){
+
+        var day=new Array(7);
+        var i;
+        //day[0]=['요일', '일반 업무', '출/퇴근', '비업무', 'etc'];
+        for(i =0;i<7;i++){
+            day[i]=Array.apply(null, new Array(4)).map(Number.prototype.valueOf,0);
+        }
+        var col;
+        var weeknum;
+        var year;
+        var date;
+        var thisyear = new Date().getFullYear();
+
+
+        $.each(result, function(i,obj){
+        //document.getElementById("fortest").innerHTML+=obj.purpose;
+        date = new Date(obj.startDate);
+        year = date.getFullYear();
+
+        if(year == (thisyear-1)) {
+            if(parseInt(obj.distance)>=0){
+                switch(obj.purpose){
+                    case "a":
+                        col=0;
+                        break;
+                    case "e":
+                        col=1;
+                        break;
+                    case "g":
+                        col=2;
+                        break;
+                    default:
+                        col=3;
+
+                    }
+
+                    weeknum = new Date(obj.startDate).getDay();
+                    day[parseInt(weeknum)][col]+=1;
+                }
+            }
+          });
+
+
+           var data = google.visualization.arrayToDataTable([
+                    ['요일', '일반 업무', '출/퇴근', '비업무', 'etc'],
+                    ['SUN',day[0][0],day[0][1],day[0][2],day[0][3]],
+                    ['MON',day[1][0],day[1][1],day[1][2],day[1][3]],
+                    ['TUE',day[2][0],day[2][1],day[2][2],day[2][3]],
+                    ['WED',day[3][0],day[3][1],day[3][2],day[3][3]],
+                    ['THU',day[4][0],day[4][1],day[4][2],day[4][3]],
+                    ['FRI',day[5][0],day[5][1],day[5][2],day[5][3]],
+                    ['SAT',day[6][0],day[6][1],day[6][2],day[6][3]]
+              ]);
+
+            var options = {
+              width : 1100, // 가로 px
+              height : 200,
+              seriesType: 'bars',
+              series: {4: {type: 'line'}},
+            };
+
+            var chart = new google.visualization.ComboChart(document.getElementById('chart_div3'));
+            document.getElementById("charttitle3").innerHTML="목적별 운행 횟수";
+            chart.draw(data, options);
+
+    }
+
+    function drawCostChart(result) {
+
+      var day=new Array(7);
+      var i;
+      //day[0]=['요일', '일반 업무', '출/퇴근', '비업무', 'etc'];
+      for(i =0;i<7;i++){
+          day[i]=Array.apply(null, new Array(3)).map(Number.prototype.valueOf,0);
+      }
+      var col;
+      var weeknum;
+      var year;
+      var date;
+      var thisyear = new Date().getFullYear();
+
+      $.each(result, function(i,obj){
+      //document.getElementById("fortest").innerHTML+=obj.purpose;
+      date = new Date(obj.startDate);
+      year = date.getFullYear();
+
+      if(year == (thisyear-1)) {
+
+        weeknum = new Date(obj.startDate).getDay();
+
+          if(parseInt(obj.oilAmount)>=0){
+              col = 0;
+              day[parseInt(weeknum)][col]+=parseInt(obj.oilAmount);
+            }
+          if(parseInt(obj.tollAmount)>=0){
+                col = 1;
+                day[parseInt(weeknum)][col]+=parseInt(obj.tollAmount);
+              }
+          if(parseInt(obj.gitaAmount)>=0) {
+                col = 2;
+                day[parseInt(weeknum)][col]+=parseInt(obj.gitaAmount);
+
+            }
+          }
+        }
+      );
+           var data = google.visualization.arrayToDataTable([
+                  ['요일', '주유비', '톨비', 'etc'],
+                  ['SUN',day[0][0],day[0][1],day[0][2]],
+                  ['MON',day[1][0],day[1][1],day[1][2]],
+                  ['TUE',day[2][0],day[2][1],day[2][2]],
+                  ['WED',day[3][0],day[3][1],day[3][2]],
+                  ['THU',day[4][0],day[4][1],day[4][2]],
+                  ['FRI',day[5][0],day[5][1],day[5][2]],
+                  ['SAT',day[6][0],day[6][1],day[6][2]]
+            ]);
+
+          var options = {
+            width : 1100, // 가로 px
+            height : 200, // 세로 px
+            bar : {
+               groupWidth : '50%' // 그래프 너비 설정 %
+            },
+            legend : {
+               position : 'none' // 항목 표시 여부 (현재 설정은 안함)
+            },
+            seriesType: 'bars',
+            series: {3: {type: 'line'}}
+          };
+
+          var chart = new google.visualization.ComboChart(document.getElementById('chart_div4'));
+          document.getElementById("charttitle4").innerHTML="비용";
+          chart.draw(data, options);
+
+  }
+  </script>
+</head>
+
+    <body>
+        <p id="charttitle" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+        <div id = "chart_div"></div>
+        <p id="charttitle2" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+        <div id = "chart_div2"></div>
+        <p id="charttitle3" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+        <div id = "chart_div3"></div>
+        <p id="mapp" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+        <p id="message"></p>
+        <div id = "map"></div>
+          <style>
+            #map {
+              height: 600px;
+              width: 1100px;
+            }
+            html, body {
+              height: 100%;
+              margin: 0;
+              padding: 0;
+            }
+          </style>
+            <script>
+
+                var mcOptionsr = {
+                    gridSize: 20,
+                    maxZoom: 15,
+                    styles: [{
+                        height: 53,
+                        url: "markr_1.png",
+                        width: 53
+                    },
+                    {
+                        height: 56,
+                        url: "markr_2.png",
+                        width: 56
+                    },
+                    {
+                        height: 66,
+                        url: "markr_3.png",
+                        width: 66
+                    },
+                    {
+                        height: 78,
+                        url: "markr_4.png",
+                        width: 78
+                    },
+                    {
+                        height: 90,
+                        url: "markr_5.png",
+                        width: 90
+                    }]
+                };
+                var mcOptionsb = {
+                    gridSize: 20,
+                    maxZoom: 15,
+                    styles: [{
+                        height: 53,
+                        url: "markb_1.png",
+                        width: 53
+                    },
+                    {
+                        height: 56,
+                        url: "markb_2.png",
+                        width: 56
+                    },
+                    {
+                        height: 66,
+                        url: "markb_3.png",
+                        width: 66
+                    },
+                    {
+                        height: 78,
+                        url: "markb_4.png",
+                        width: 78
+                    },
+                    {
+                        height: 90,
+                        url: "markb_5.png",
+                        width: 90
+                    }]
+                };
+
+                function callb(){
+
+                    $(document).ready(function() {
+
+                    $.ajax({
+
+                      url : "stdsjson.php",
+                      dataType : "JSON",
+                      success : function(result) {
+                        succ(result);
+                      },
+                        fail:function(){
+                            alert("chart load fail");
+                        }
+                    });
+                    });
+
+                    var start=[],stop=[];
+                    var temp1,temp2;
+
+                    function succ(result){
+
+                      var year;
+                      var date;
+                      var thisyear = new Date().getFullYear();
+
+                        $.each(result, function(i,obj){
+
+                          date = new Date(obj.startDate);
+                          year = date.getFullYear();
+
+                        if(year == (thisyear-1)) {
+
+                        if(parseInt(obj.distance)>0&&!Number.isInteger(parseFloat(obj.startLatitude))&&!Number.isInteger(parseFloat(obj.startLongitude))&&!Number.isInteger(parseFloat(obj.stopLongitude))&&!Number.isInteger(parseFloat(obj.stopLatitude)))
+                         {
+                             temp1=new google.maps.LatLng(parseFloat(obj.startLatitude), parseFloat(obj.startLongitude));
+                             start.push(temp1);
+                             temp2=new google.maps.LatLng(parseFloat(obj.stopLatitude), parseFloat(obj.stopLongitude));
+                             stop.push(temp2);
+                         }
+                       }
+                      });
+
+                        initMap();
+                    }
+
+                  function initMap() {
+                      document.getElementById("message").innerHTML="  출발지 : RED 도착지 : BLUE";
+                      document.getElementById("mapp").innerHTML="출발도착지";
+                    var map = new google.maps.Map(document.getElementById('map'), {
+                      zoom: 7,
+                      center: {lat: 36.322714, lng: 127.999915}
+                    });
+
+                      var redmarker = "markerr.png";
+                      var bluemarker = "markerb.png";
+
+                      var markersr = start.map(function(location,i){
+                          return new google.maps.Marker({
+                            position: location,
+                            icon : redmarker
+                      });
+                      });
+                      var markersb = stop.map(function(location,i){
+                          return new google.maps.Marker({
+                            position: location,
+                            icon: bluemarker
+                      });
+                      });
+
+                    var markerClusterr = new MarkerClusterer(map, markersr,mcOptionsr);
+                    var markerClusterb = new MarkerClusterer(map, markersb,mcOptionsb);
+                  }
+                }
+            </script>
+        <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+        </script>
+        <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgdDp3-ZOkGRRq1zekO9XcnDu_LHekzzU&callback=callb">
+        </script>
+      </div>
+      <p id="charttitle4" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;"></p>
+      <div id = "chart_div4"></div>
+    </body>
+</html>
