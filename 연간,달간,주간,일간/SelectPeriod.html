@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" type="text/css" media="all" />
+<script src = "https://www.gstatic.com/charts/loader.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<script src="http://code.jquery.com/ui/1.8.18/jquery-ui.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+$(function() {
+
+  var dates = $( "#from, #to " ).datepicker({
+  prevText: '이전 달',
+  nextText: '다음 달',
+  monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+  monthNamesShort: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+  dayNames: ['일','월','화','수','목','금','토'],
+  dayNamesShort: ['일','월','화','수','목','금','토'],
+  dayNamesMin: ['일','월','화','수','목','금','토'],
+  dateFormat: 'yy-mm-dd',
+  showMonthAfterYear: true,
+  yearSuffix: '년',
+  maxDate:'+30d',
+
+  onSelect: function( selectedDate ) {
+    var option = this.id == "from" ? "minDate" : "maxDate",
+      instance = $( this ).data( "datepicker" ),
+      date = $.datepicker.parseDate(
+        instance.settings.dateFormat ||
+        $.datepicker._defaults.dateFormat,
+        selectedDate, instance.settings );
+    dates.not( this ).datepicker( "option", option, date );
+  }
+  })
+});
+
+</script>
+<p>조회기간: <input type="text" id="from"> ~ <input type="text" id="to"></p>
+<button id="myBtn">click</button>
+<p id = "demo"></p>
+<script>
+document.getElementById("myBtn"), addEventListener("click", myFunction);
+function myFunction() {
+  document.getElementById("demo").innerHTML = getElementById("from");
+}
+</script>

@@ -1,0 +1,99 @@
+<html>
+<head>
+  <title>Google Chart</title>
+  <script
+  src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+  <script type="text/javascript"
+  src = "https://www.gstatic.com/charts/loader.js"></script>
+
+  <script type="text/javascript">
+  $(document).ready(function() {
+
+    $.ajax({
+      url : "amount.php",
+      dataType : "JSON",
+      success : function(result) {
+        google.charts.load('current', {
+          'packages' : [ 'corechart']
+        });
+        google.charts.setOnLoadCallback(function() {
+          drawChart(result);
+        });
+      },
+        fail:function(){
+            alert("chart load fail");
+        }
+    });
+    });
+
+    function drawChart(result) {
+
+      var day=new Array(7);
+      var i;
+      //day[0]=['요일', '일반 업무', '출/퇴근', '비업무', 'etc'];
+      for(i =0;i<7;i++){
+          day[i]=Array.apply(null, new Array(3)).map(Number.prototype.valueOf,0);
+      }
+      var col;
+      var weeknum;
+      $.each(result, function(i,obj){
+      //document.getElementById("fortest").innerHTML+=obj.purpose;
+
+        weeknum = new Date(obj.startDate).getDay();
+
+          if(parseInt(obj.oilAmount)>=0){
+              col = 0;
+              day[parseInt(weeknum)][col]+=parseInt(obj.oilAmount);
+            }
+          if(parseInt(obj.tollAmount)>=0){
+                col = 1;
+                day[parseInt(weeknum)][col]+=parseInt(obj.tollAmount);
+              }
+          if(parseInt(obj.gitaAmount)>=0) {
+                col = 2;
+                day[parseInt(weeknum)][col]+=parseInt(obj.gitaAmount);
+              }
+          }
+
+      );
+           var data = google.visualization.arrayToDataTable([
+                  ['요일', '주유비', '톨비', 'etc'],
+                  ['SUN',day[0][0],day[0][1],day[0][2]],
+                  ['MON',day[1][0],day[1][1],day[1][2]],
+                  ['TUE',day[2][0],day[2][1],day[2][2]],
+                  ['WED',day[3][0],day[3][1],day[3][2]],
+                  ['THU',day[4][0],day[4][1],day[4][2]],
+                  ['FRI',day[5][0],day[5][1],day[5][2]],
+                  ['SAT',day[6][0],day[6][1],day[6][2]]
+            ]);
+
+          var options = {
+            width : 800, // 가로 px
+            height : 200, // 세로 px
+            bar : {
+               groupWidth : '50%' // 그래프 너비 설정 %
+            },
+            legend : {
+               position : 'none' // 항목 표시 여부 (현재 설정은 안함)
+            },
+            title : '비용(요일별)',
+            vAxis: {title: '비용'},
+            hAxis: {title: '요일'},
+            seriesType: 'bars',
+            series: {3: {type: 'line'}}
+          };
+
+          var chart = new google.visualization.ComboChart(document.getElementById('chart_div'));
+          document.getElementById("charttitle").innerHTML="비용";
+          chart.draw(data, options);
+
+  }
+
+  </script>
+    </head>
+    <body>
+        <p id="charttitle" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">비용</p>
+        <div id = "chart_div"></div>
+    </body>
+</html>
