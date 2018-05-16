@@ -1,0 +1,91 @@
+<!DOCTYPE HTML>
+<html>
+<head>  
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<script src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<script>
+    
+    function clicked(){
+        
+            var start=document.getElementById("start").value;
+            var des=document.getElementById("des").value;
+            $.ajax({
+                    type:"POST",
+                    url:"date0516.php",
+                    data:{"start" : start, "des" : des},
+                    dataType:"json",
+                    success:function(res){
+                        parse(res);                    
+                },
+                fail:function(){
+                    alert("fail");
+                }
+
+                });
+            }
+    
+    function parse(res){
+        
+        var dis=[0,0,0,0,0,0,0];
+        $.each(res, function(i,obj){
+           
+            dis[parseInt(obj.day)-1]+=parseInt(obj.distance);
+            
+        });
+       
+        
+       // window.onload = function () {
+
+        var chart = new CanvasJS.Chart("chartContainer", {
+            animationEnabled: true,
+            theme: "light2", // "light1", "light2", "dark1", "dark2"
+            title:{
+                text: "운행누적"
+            },
+            axisY: {
+                title: "거리",
+              scaleBreaks: {
+                    type: "wavy",
+                    customBreaks: [{
+                        startValue: 5000,
+                        endValue: 10000
+                        }
+                ]}
+            },
+            data: [{        
+                type: "column",  
+                showInLegend: true, 
+                legendMarkerColor: "grey",
+                //legendText: "MMbbl = one million barrels",
+                dataPoints: [    
+                    
+                    { y: dis[0], label: "월" },
+                    { y: dis[1],  label: "화" },
+                    { y: dis[2],  label: "수" },
+                    { y: dis[3],  label: "목" },
+                    { y: dis[4],  label: "금" },
+                    { y: dis[5], label: "토" },
+                    { y: dis[6],  label: "일" }
+                ]
+            }]
+        });
+        chart.render();
+
+       // }
+        
+    }
+
+</script>
+</head>
+<body>
+    <form>
+            <input type="date" placeholder="출발" id="start">
+            <input type="date" placeholder="도착" id="des">
+            <input type="button" value="click" onclick="clicked()">
+    </form>
+    <p id="fortest"></p>
+    <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+
+</body>
+</html>
