@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+<script type="text/javascript"
+  src = "https://www.gstatic.com/charts/loader.js"></script>
+
+</head>
+<body>
+
+<!-- 달력 선택 부분 -->
+<div class="container" style="width:900px;">
+
+<div class="col-md-3">
+<input type="text" name="from_date" id="from_date" class="form-control" placeholder="from date" />
+</div>
+
+<div class="col-md-3">
+<input type="text" name="to_date" id="to_date" class="form-control" placeholder="to date" />
+</div>
+
+<div class="col-md-5">
+<input type="button" name="filter" id="filter" class="btn btn-info" value="검색" />
+</div>
+
+<div style="clear:both"></div>
+</br>
+
+<div id="order_table">
+
+</div>
+
+</div>
+</body>
+</html>
+
+
+<script>
+
+//달력 날짜 출력 설정
+$.datepicker.setDefaults({
+dateFormat:'yy-mm-dd'
+});
+
+//부트스트랩 달력 기능
+$(document).ready(function(){
+
+$("#from_date").datepicker({
+  altField : '#getdate',
+  dateFormat:'yy-mm-dd'
+});
+$("#to_date").datepicker({
+  altField : '#getdate',
+  dateFormat:'yy-mm-dd'
+});
+
+$('#filter').click(function(){
+
+var from_date = new Date($("#from_date").datepicker("getDate"));
+var to_date = new Date($("#to_date").datepicker("getDate"));
+//빈칸이 없으면
+if(from_date != '' && to_date != '')
+{
+$.ajax({
+
+type:"POST",
+url:"filter.php",
+dataType:'json',
+data:{from_date : from_date, to_date : to_date},
+
+success:function(data) {
+  console.log(data);
+}
+});
+}
+});
+});
+
+</script>
