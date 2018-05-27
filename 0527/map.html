@@ -1,0 +1,147 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script type="text/javascript" src = "https://www.gstatic.com/charts/loader.js"></script>
+  <script>
+
+  function clicked(){
+
+          var start=document.getElementById("start").value;
+          var des=document.getElementById("des").value;
+
+          $.ajax({
+                  type:"POST",
+                  url:"stdsjson.php",
+                  data:{"start" : start, "des" : des},
+                  dataType:"json",
+
+                  success:function(res){
+                      succ(res);
+                      getPoints(res);
+              },
+
+              fail:function(){
+                  alert("fail");
+              }
+              });
+
+              var start=[],stop=[];
+              var temp1,temp2;
+
+              function succ(result){
+
+                  $.each(result, function(i,obj){
+
+                  if(parseInt(obj.distance)>0&&!Number.isInteger(parseFloat(obj.startLatitude))&&!Number.isInteger(parseFloat(obj.startLongitude))&&!Number.isInteger(parseFloat(obj.stopLongitude))&&!Number.isInteger(parseFloat(obj.stopLatitude)))
+                   {
+                       temp1=new google.maps.LatLng(parseFloat(obj.startLatitude), parseFloat(obj.startLongitude));
+                       start.push(temp1);
+                       temp2=new google.maps.LatLng(parseFloat(obj.stopLatitude), parseFloat(obj.stopLongitude));
+                       stop.push(temp2);
+                   }
+                });
+                  initMap();
+              }
+
+            function initMap() {
+
+                document.getElementById("message").innerHTML="출발지";
+                document.getElementById("message2").innerHTML="도착지";
+
+              var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {lat: 36.322714, lng: 127.999915}
+              });
+                var redmarker = "markerr.png";
+                var markersr = start.map(function(location,i){
+                    return new google.maps.Marker({
+                      position: location,
+                      icon : redmarker
+                });
+                });
+
+              var markerClusterr = new MarkerClusterer(map, markersr,mcOptionsr);
+
+              var map2 = new google.maps.Map(document.getElementById('map2'), {
+                  zoom: 8,
+                  center: {lat: 36.322714, lng: 127.999915},
+                  mapTypeId: 'satellite'
+              });
+
+              var heatmap = new google.maps.visualization.HeatmapLayer({
+                 data: getPoints(),
+                 map: map2
+              });
+          }
+          function getPoints() {
+            return stop;
+          }
+
+          var mcOptionsr = {
+              gridSize: 20,
+              maxZoom: 15,
+              styles: [{
+                  height: 53,
+                  url: "markr_1.png",
+                  width: 53
+              },
+              {
+                  height: 56,
+                  url: "markr_2.png",
+                  width: 56
+              },
+              {
+                  height: 66,
+                  url: "markr_3.png",
+                  width: 66
+              },
+              {
+                  height: 78,
+                  url: "markr_4.png",
+                  width: 78
+              },
+              {
+                  height: 90,
+                  url: "markr_5.png",
+                  width: 90
+              }]
+          };
+        }
+  </script>
+</head>
+
+    <body>
+      <form>
+              <input type="date" placeholder="출발" id="start">
+              <b>~</b>
+              <input type="date" placeholder="도착" id="des">
+              <input type="button" value="click" onclick="clicked()">
+      </form>
+      <div id = "message" style="float:left;width:50%;height:5%;text-align:center;font:bold 2.0em/1.0em 돋음체;"></div>
+      <div id = "message2" style="clear:right;float:right;width:50%;height:5%;text-align:center;font:bold 2.0em/1.0em 돋음체;"></div>
+      <div id = "map" style="float:left;width:50%;height:95%;"></div>
+      <div id = "map2" style="clear:right;float:right;width:50%;height:95%;"></div>
+          <style>
+            #map {
+              height: 600px;
+              width: 1000px;
+            }
+            #map2 {
+              height: 600px;
+              width: 1000px;
+            }
+            html, body {
+              height: 100%;
+              margin: 0;
+              padding: 0;
+            }
+          </style>
+        <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+        </script>
+        <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgdDp3-ZOkGRRq1zekO9XcnDu_LHekzzU&libraries=visualization&callback=clicked">
+        </script>
+      </div>
+    </body>
+</html>
