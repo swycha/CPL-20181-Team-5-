@@ -1,0 +1,413 @@
+<html>
+    <head>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script>
+            var comseq;
+            var stdate, endate;
+            var selectItem;
+            var deptseq=[];
+            
+            function change(clicked_id){
+                switch(clicked_id){
+                    case "1":
+                        $("#cumchart").show();
+                        $("#timechart").show();
+                        $("#purposechart").show();
+                        $("#start").hide();
+                        $("#desti").hide();
+                        $("#emp").hide();
+                        $("#oilcost").hide();
+                        break;
+                    case "2":
+                        $("#cumchart").hide();
+                        $("#timechart").hide();
+                        $("#purposechart").hide();
+                        $("#start").show();
+                        $("#desti").show();
+                        $("#emp").hide();
+                        $("#oilcost").hide();
+                        break;
+                    case "3":
+                        $("#cumchart").hide();
+                        $("#timechart").hide();
+                        $("#purposechart").hide();
+                        $("#start").hide();
+                        $("#desti").hide();
+                        $("#emp").show();
+                        $("#oilcost").hide();
+                        break;
+                    case "4":
+                        $("#cumchart").hide();
+                        $("#timechart").hide();
+                        $("#purposechart").hide();
+                        $("#start").hide();
+                        $("#desti").hide();
+                        $("#emp").hide();
+                        $("#oilcost").show();
+                }
+                
+            }
+            
+            function combutclicked(){
+                comseq=document.getElementById("comseq").value;
+                stdate=document.getElementById("stdate").value;
+                endate=document.getElementById("endate").value;
+
+                $.ajax({
+                    type:"POST",
+                    url:"carbizdeptdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "method" : "dept"},
+                    dataType:"json",
+                    success: function(deptres){
+                        parsedept(deptres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+         
+                document.getElementById("comseq").value=null;
+                document.getElementById("stdate").value=null;
+                document.getElementById("endate").value=null;
+                
+
+            }
+                
+            function parsedept(deptres){
+                
+                var option;
+                
+                $("#seldept").empty();
+                option=$("<option>--선택--</option>");
+                $("#seldept").append(option);
+                
+                $.each(deptres, function(i,obj){
+                    deptseq.push(obj.departmentSeq);
+                    option=$("<option>"+obj.dept+"</option>");
+                    $("#seldept").append(option);
+                });
+                
+                $("#seldept").show();
+            }
+            
+            function selclicked(){
+                selectItem=$("#seldept").val();
+                var selectSeq=document.getElementById("seldept").selectedIndex;
+                $.ajax({
+                    type:"POST",
+                    url:"carbizdeptdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "dept": selectItem, "method" : "init"},
+                    dataType:"json",
+                    success: function(initres){
+                        parseinit(initres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+                $.ajax({
+                    type:"POST",
+                    url:"carbizdeptdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "dept": selectItem, "method" : "emp"},
+                    dataType:"json",
+                    success: function(empres){
+                        parseemp(empres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+                $.ajax({
+                    type:"POST",
+                    url:"carbizdeptdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "dept": deptseq[selectSeq-1], "method" : "oil"},
+                    dataType:"json",
+                    success: function(oilres){
+                        parseoil(oilres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+                //alert(selectItem);
+            }
+            
+            var day, i;
+            var totdis=[0,0,0,0,0,0,0];
+            var tottime=[0,0,0,0,0,0,0];
+            var purpose=[0,0,0,0];
+            var cumtime=[];
+            
+            //purpose[0]=['일반 업무', '출/퇴근', '비업무', 'etc'];
+            /*for(i=0;i<7;i++)
+                purpose[i]=Array.apply(null, new Array(4)).map(Number.prototype.valueOf,0);*/
+            function parseinit(initres){
+                 $.each(initres, function(i,obj){
+                    day=parseInt(obj.day)-1;
+                    totdis[day]+=parseInt(obj.distance);
+                    tottime[day]+=parseInt(obj.time);
+                    
+                    switch(obj.purpose){
+                        case "a":
+                            purpose[0]+=1;
+                            break;
+                        case "e":
+                            purpose[1]+=1;
+                            break;
+                        case "g":
+                            purpose[2]+=1;
+                            break;
+                        default:
+                            purpose[3]+=1;
+                            
+                    }
+                     
+                 });
+                for(i=0;i<7;i++){
+                    cumtime.push(parseInt(tottime[i]/3600)+"시간 "+parseInt((tottime[i]- parseInt(tottime[i]/3600)*3600)/60)+"분");
+                }
+                drawdis();
+                drawtime();
+                drawpur();
+            }
+            
+            var namedata=[];
+            
+            function parseemp(empres){
+                var drivingcnt;
+                $.each(empres, function(i,obj){
+                    drivingcnt=parseInt(obj.cnt);
+                    namedata.push({y: drivingcnt, label: obj.name, indexLabel: drivingcnt.toString()});
+                });
+                drawname();
+            }
+            
+            function parseoil(oilres){
+                
+                var tbody=document.getElementById("oiltable");
+                var row, cell1, cell2, cell3, cell4;
+                
+                $.each(oilres, function(i,obj){
+                   
+                    row=tbody.insertRow(tbody.rows.length);
+                    cell1 = row.insertCell(0);
+                    cell2 = row.insertCell(1);
+                    cell3 = row.insertCell(2);
+                    cell4 = row.insertCell(3);
+                    
+                    cell1.innerHTML=obj.uname;
+                    cell2.innerHTML=selectItem;
+                    cell3.innerHTML=obj.ocost;
+                    cell4.innerHTML=obj.odate;
+                    
+                });
+            }
+            
+            function drawname(){
+                var chart = new CanvasJS.Chart("empchart_div", {
+                animationEnabled: true,
+                    
+                axisX:{
+                    interval: 1
+                },
+                axisY2:{
+                    interlacedColor: "rgba(1,77,101,.2)",
+                    gridColor: "rgba(1,77,101,.1)"
+                },
+                data: [{
+                    type: "bar",
+                    name: "횟수",
+                    axisYType: "secondary",
+                    color: "#014D65",
+                    dataPoints: namedata
+                }]
+            });
+            chart.render();
+            }
+            
+            function drawdis(){
+                //document.activeElement("fortest").innerHeight=totdis[0];
+                var chart = new CanvasJS.Chart("cumchart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                axisY: {
+                    
+                    title: "거리"/*,
+                    scaleBreaks: {
+                        type: "wavy",
+                        spacing:8,
+                        customBreaks: [{
+                            startValue: 4000,
+                            endValue: 5000
+                        }]
+                    }*/
+                },
+                data: [{        
+                    type: "column",  
+                    //showInLegend: true, 
+                    //legendMarkerColor: "grey",
+                        //legendText: "MMbbl = one million barrels",
+                    dataPoints: [    
+                        {y:totdis[1], label:"월", indexLabel: totdis[1].toString()},
+                        {y:totdis[2], label:"화", indexLabel: totdis[2].toString()},
+                        {y:totdis[3], label:"수", indexLabel: totdis[3].toString()},
+                        {y:totdis[4], label:"목", indexLabel: totdis[4].toString()},
+                        {y:totdis[5], label:"금", indexLabel: totdis[5].toString()},
+                        {y:totdis[6], label:"토", indexLabel: totdis[6].toString()},
+                        {y:totdis[0], label:"일", indexLabel: totdis[0].toString()}
+                    ]
+                    }]
+                });
+                chart.render();
+            }
+            
+            function drawtime(){
+                    var chart = new CanvasJS.Chart("timechart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                    axisY: {
+
+                        title: "시간"/*,
+                        scaleBreaks: {
+                            type: "wavy",
+                            spacing:8,
+                            customBreaks: [{
+                                startValue: 4000000,
+                                endValue: 6000000
+                            }]
+                        }*/
+                    },
+                    data: [{        
+                        type: "column",  
+                        //showInLegend: true, 
+                        //legendMarkerColor: "grey",
+                            //legendText: "MMbbl = one million barrels",
+                        dataPoints: [    
+                            {y:tottime[1], label:"월", indexLabel: cumtime[1]},
+                            {y:tottime[2], label:"화", indexLabel: cumtime[2]},
+                            {y:tottime[3], label:"수", indexLabel: cumtime[3]},
+                            {y:tottime[4], label:"목", indexLabel: cumtime[4]},
+                            {y:tottime[5], label:"금", indexLabel: cumtime[5]},
+                            {y:tottime[6], label:"토", indexLabel: cumtime[6]},
+                            {y:tottime[0], label:"일", indexLabel: cumtime[0]}
+                        ]
+                        }]
+                    });
+                chart.render();
+            }
+            
+            function drawpur(){
+                var chart = new CanvasJS.Chart("purposechart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                    axisY: {
+
+                        title: "목적"/*,
+                        scaleBreaks: {
+                            type: "wavy",
+                            spacing:8,
+                            customBreaks: [{
+                                startValue: 4000000,
+                                endValue: 6000000
+                            }]
+                        }*/
+                    },
+                    data: [{        
+                        type: "column",  
+                        //showInLegend: true, 
+                        //legendMarkerColor: "grey",
+                            //legendText: "MMbbl = one million barrels",
+                        dataPoints: [    
+                            {y:purpose[0], label:"일반 업무", indexLabel: purpose[0].toString()},
+                            {y:purpose[1], label:"출/퇴근", indexLabel: purpose[1].toString()},
+                            {y:purpose[2], label:"비업무", indexLabel: purpose[2].toString()},
+                            {y:purpose[3], label:"etc", indexLabel: purpose[3].toString()}
+                        ]
+                        }]
+                    });
+                chart.render();
+            }
+        </script>
+    </head>
+    <body>
+        <style>
+            #map {
+              height: 600px;
+              width: 1000px;
+            }
+            #map2 {
+              height: 600px;
+              width: 1000px;
+            }
+            html, body {
+              height: 100%;
+              margin: 0;
+              padding: 0;
+            }
+        </style>
+        <div id="insert">
+            <form onsubmit="return false">
+                <input type="number" id="comseq" placeholder="회사번호" required=TRUE name="comseq" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                시작일
+                <input type="date" id="stdate" required=TRUE name="stdate" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                최종일?
+                <input type="date" id="endate" required=TRUE name="endate" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                <input type="button" id="combut" value="클릭" onclick="combutclicked()">
+            </form>
+            <select id="seldept" style="display: none;" onchange="selclicked()"><option></option></select>
+        </div>
+        <button id="1" onclick="change(this.id)">1</button>
+        <button id="2" onclick="change(this.id)">2</button>
+        <button id="3" onclick="change(this.id)">3</button>
+        <button id="4" onclick="change(this.id)">4</button>
+        <p id="fortest"></p>
+        <div id = "cumchart" style="float:left; width:50%;margin-top : 20px;margin-bottom : 30px;">
+            <p id="cumchart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 누적</p>
+            <div id="cumchart_div" style="height: 300px;"></div>
+        </div>
+        <div id = "timechart" style="clear:right;float:right;width:50%;margin-top : 20px; margin-bottom : 30px;">
+            <p id="timechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 시간</p>
+            <div id = "timechart_div" style="height: 300px;"></div>
+        </div>
+        <div id = "purposechart" style="float:left; width:30%;margin-top : 20px;margin-bottom : 30px;">
+            <p id="purposechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 목적</p>
+            <div id = "purposechart_div" style="height: 300px; "></div>
+        </div>
+        <div id="oilcost" style="clear:right;float:right;width: 70%; margin-top : 20px; margin-bottom : 30px;">
+            <p style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">유류비 정산금액</p>
+            <table id = "oiltable" style="width: 100%;text-align: center;">
+                <thead>
+                    <th style="width: 20%">이름</th>
+                    <th style="width: 20%">부서</th>
+                    <th style="width: 20%">정산 금액</th>
+                    <th style="width: 20%">정산 날짜</th>                    
+                </thead>
+                <tbody id="oil-tbody"></tbody>
+            </table>
+            
+        </div>
+        <div id="start" style="padding: 20px;float: left; display: none;">
+            <p>출발</p>
+        </div>
+        <div id="desti" style="padding: 20px; display: none;">
+            <p>도착</p>
+        </div>
+        <div id="emp" style="padding: 20px; display: none;">
+            <p>직원별</p>
+            <div id = "empchart_div" style="height: 500px; width: 80%;"></div>
+        </div>
+        
+    </body>
+</html>
