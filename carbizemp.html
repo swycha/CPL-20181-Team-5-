@@ -1,0 +1,441 @@
+<html>
+    <head>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+        </script>
+        <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgdDp3-ZOkGRRq1zekO9XcnDu_LHekzzU&libraries=visualization&callback=callb">
+        </script>
+        <script>
+            var comseq;
+            var stdate, endate;
+            
+            var mcOptionsr = {
+                  gridSize: 20,
+                  maxZoom: 15,
+                  styles: [{
+                      height: 53,
+                      url: "markr_1.png",
+                      width: 53
+                  },
+                  {
+                      height: 56,
+                      url: "markr_2.png",
+                      width: 56
+                  },
+                  {
+                      height: 66,
+                      url: "markr_3.png",
+                      width: 66
+                  },
+                  {
+                      height: 78,
+                      url: "markr_4.png",
+                      width: 78
+                  },
+                  {
+                      height: 90,
+                      url: "markr_5.png",
+                      width: 90
+                  }]
+              };
+        
+            var mcOptionsb = {
+                gridSize: 20,
+                maxZoom: 15,
+                styles: [{
+                    height: 53,
+                    url: "markb_1.png",
+                    width: 53
+                },
+                {
+                    height: 56,
+                    url: "markb_2.png",
+                    width: 56
+                },
+                {
+                    height: 66,
+                    url: "markb_3.png",
+                    width: 66
+                },
+                {
+                    height: 78,
+                    url: "markb_4.png",
+                    width: 78
+                },
+                {
+                    height: 90,
+                    url: "markb_5.png",
+                    width: 90
+                }] 
+            };
+            
+            function callb(){}
+            function combutclicked(){
+                comseq=document.getElementById("comseq").value;
+                stdate=document.getElementById("stdate").value;
+                endate=document.getElementById("endate").value;
+
+                $.ajax({
+                    type:"POST",
+                    url:"carbizempdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "method" : "emp"},
+                    dataType:"json",
+                    success: function(empres){
+                        parseemp(empres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+         
+                document.getElementById("comseq").value=null;
+                document.getElementById("stdate").value=null;
+                document.getElementById("endate").value=null;
+            }
+            
+            function parseemp(empres){
+                
+                var option;
+                
+                $("#selemp").empty();
+                option=$("<option>--선택--</option>");
+                $("#selemp").append(option);
+                
+                $.each(empres, function(i,obj){
+                    option=$("<option>"+obj.name+"</option>");
+                    $("#selemp").append(option);
+                });
+                
+                $("#selemp").show();
+            }
+            var day, i;
+            var totdis;
+            var tottime;
+            var purpose;
+            var cumtime;
+            var selectItem;
+            function selclicked(){
+                
+                selectItem=$("#selemp").val();
+               // alert(selectItem);
+                totdis=[0,0,0,0,0,0,0];
+                tottime=[0,0,0,0,0,0,0];
+                purpose=[0,0,0,0];
+                cumtime=[];
+                
+                $.ajax({
+                    type:"POST",
+                    url:"carbizempdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "name": selectItem, "method" : "init"},
+                    dataType:"json",
+                    success: function(initres){
+                        parseinit(initres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+                $.ajax({
+                    type:"POST",
+                    url:"carbizempdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "name": selectItem, "method" : "stds"},
+                    dataType:"json",
+                    success: function(stdsres){
+                        parsestds(stdsres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+                $.ajax({
+                    type:"POST",
+                    url:"carbizempdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "name": selectItem, "method" : "oil"},
+                    dataType:"json",
+                    success: function(oilres){
+                        parseoil(oilres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+            }
+            
+            function parseoil(oilres){
+                var tbody=document.getElementById("oiltable");
+                var row, cell1, cell2, cell3;
+                
+                $.each(oilres, function(i,obj){
+                   
+                    row=tbody.insertRow(tbody.rows.length);
+                    cell1 = row.insertCell(0);
+                    cell2 = row.insertCell(1);
+                    cell3 = row.insertCell(2);
+                    
+                    cell1.innerHTML=selectItem;
+                    cell2.innerHTML=obj.ocost;
+                    cell3.innerHTML=obj.odate;
+                    
+
+                });    
+            }
+                        
+            
+            var start=[],stop=[];
+            var temp1,temp2;
+            
+            function parsestds(stdsres){
+                
+                $.each(stdsres, function(i,obj){
+                    //alert(Number.isInteger(parseFloat(obj.startLatitude)));
+                 
+                    if(!Number.isInteger(parseFloat(obj.startLatitude))&&!Number.isInteger(parseFloat(obj.startLongitude))&&!Number.isInteger(parseFloat(obj.stopLongitude))&&!Number.isInteger(parseFloat(obj.stopLatitude)))
+                   {
+                       
+                       temp1=new google.maps.LatLng(parseFloat(obj.startLatitude), parseFloat(obj.startLongitude));
+                       start.push(temp1);
+                       temp2=new google.maps.LatLng(parseFloat(obj.stopLatitude), parseFloat(obj.stopLongitude));
+                       stop.push(temp2);
+                   }
+                });
+                initMap();
+            }
+            
+            function initMap() {
+                
+                document.getElementById("message").innerHTML="출발지";
+                document.getElementById("message2").innerHTML="도착지";
+                
+                var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {lat: 36.322714, lng: 127.999915}
+                });
+                var redmarker = "markerr.png";
+                var markersr = start.map(function(location,i){
+                    return new google.maps.Marker({
+                      position: location,
+                      icon : redmarker
+                });
+                });
+              var markerClusterr = new MarkerClusterer(map, markersr,mcOptionsr);
+              var map2 = new google.maps.Map(document.getElementById('map2'), {
+                  zoom: 8,
+                  center: {lat: 36.322714, lng: 127.999915}
+              });
+              var bluemarker = "markerb.png";
+              var markerdr = stop.map(function(location,i){
+                  return new google.maps.Marker({
+                    position: location,
+                    icon : bluemarker
+              });
+              });
+              var markerClusterb = new MarkerClusterer(map2, markerdr,mcOptionsb);
+          }
+            
+            function parseinit(initres){
+                $.each(initres, function(i,obj){
+                    day=parseInt(obj.day)-1;
+                    totdis[day]+=parseInt(obj.distance);
+                    tottime[day]+=parseInt(obj.time);
+                    
+                    switch(obj.purpose){
+                        case "a":
+                            purpose[0]+=1;
+                            break;
+                        case "e":
+                            purpose[1]+=1;
+                            break;
+                        case "g":
+                            purpose[2]+=1;
+                            break;
+                        default:
+                            purpose[3]+=1;
+                            
+                    }
+                     
+                 });
+                for(i=0;i<7;i++){
+                    cumtime.push(parseInt(tottime[i]/3600)+"시간 "+parseInt((tottime[i]- parseInt(tottime[i]/3600)*3600)/60)+"분");
+                }
+                drawdis();
+                drawtime();
+                drawpur();
+            }
+            
+            function drawdis(){
+                var chart = new CanvasJS.Chart("cumchart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                axisY: {
+                    
+                    title: "거리"/*,
+                    scaleBreaks: {
+                        type: "wavy",
+                        spacing:8,
+                        customBreaks: [{
+                            startValue: 4000,
+                            endValue: 5000
+                        }]
+                    }*/
+                },
+                data: [{        
+                    type: "column",  
+                    //showInLegend: true, 
+                    //legendMarkerColor: "grey",
+                        //legendText: "MMbbl = one million barrels",
+                    dataPoints: [    
+                        {y:totdis[1], label:"월", indexLabel: totdis[1].toString()},
+                        {y:totdis[2], label:"화", indexLabel: totdis[2].toString()},
+                        {y:totdis[3], label:"수", indexLabel: totdis[3].toString()},
+                        {y:totdis[4], label:"목", indexLabel: totdis[4].toString()},
+                        {y:totdis[5], label:"금", indexLabel: totdis[5].toString()},
+                        {y:totdis[6], label:"토", indexLabel: totdis[6].toString()},
+                        {y:totdis[0], label:"일", indexLabel: totdis[0].toString()}
+                    ]
+                    }]
+                });
+                chart.render();
+            }
+            
+            function drawtime(){
+                //alert(cumtime[0]);
+                    var chart = new CanvasJS.Chart("timechart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                    axisY: {
+
+                        title: "시간"/*,
+                        scaleBreaks: {
+                            type: "wavy",
+                            spacing:8,
+                            customBreaks: [{
+                                startValue: 4000000,
+                                endValue: 6000000
+                            }]
+                        }*/
+                    },
+                    data: [{        
+                        type: "column",  
+                        //showInLegend: true, 
+                        //legendMarkerColor: "grey",
+                            //legendText: "MMbbl = one million barrels",
+                        dataPoints: [    
+                            {y:tottime[1], label:"월", indexLabel: cumtime[1]},
+                            {y:tottime[2], label:"화", indexLabel: cumtime[2]},
+                            {y:tottime[3], label:"수", indexLabel: cumtime[3]},
+                            {y:tottime[4], label:"목", indexLabel: cumtime[4]},
+                            {y:tottime[5], label:"금", indexLabel: cumtime[5]},
+                            {y:tottime[6], label:"토", indexLabel: cumtime[6]},
+                            {y:tottime[0], label:"일", indexLabel: cumtime[0]}
+                        ]
+                        }]
+                    });
+                chart.render();
+            }
+            
+            function drawpur(){
+                var chart = new CanvasJS.Chart("purposechart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                    axisY: {
+
+                        title: "목적"/*,
+                        scaleBreaks: {
+                            type: "wavy",
+                            spacing:8,
+                            customBreaks: [{
+                                startValue: 4000000,
+                                endValue: 6000000
+                            }]
+                        }*/
+                    },
+                    data: [{        
+                        type: "column",  
+                        //showInLegend: true, 
+                        //legendMarkerColor: "grey",
+                            //legendText: "MMbbl = one million barrels",
+                        dataPoints: [    
+                            {y:purpose[0], label:"일반 업무", indexLabel: purpose[0].toString()},
+                            {y:purpose[1], label:"출/퇴근", indexLabel: purpose[1].toString()},
+                            {y:purpose[2], label:"비업무", indexLabel: purpose[2].toString()},
+                            {y:purpose[3], label:"etc", indexLabel: purpose[3].toString()}
+                        ]
+                        }]
+                    });
+                chart.render();
+            }
+        </script>
+    </head>
+    <body>
+        <style>
+            #map {
+              height: 600px;
+              width: 1000px;
+            }
+            #map2 {
+              height: 600px;
+              width: 1000px;
+            }
+            html, body {
+              height: 100%;
+              margin: 0;
+              padding: 0;
+            }
+        </style>
+        <div id="insert">
+            <form onsubmit="return false">
+                <input type="number" id="comseq" placeholder="회사번호" required=TRUE name="comseq" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                시작일
+                <input type="date" id="stdate" required=TRUE name="stdate" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                최종일?
+                <input type="date" id="endate" required=TRUE name="endate" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                <input type="button" id="combut" value="클릭" onclick="combutclicked()">
+            </form>
+            <select id="selemp" style="display: none;" onchange="selclicked()"><option></option></select>
+        </div>
+        <p id="fortest"></p>
+        <div id = "cumchart" style="float:left; width:50%;margin-top : 20px;margin-bottom : 30px;">
+            <p id="cumchart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 누적</p>
+            <div id="cumchart_div" style="height: 300px; width: 80%;"></div>
+        </div>
+        <div id = "timechart" style="clear:right;float:right;width:50%;margin-top : 20px; margin-bottom : 30px;">
+            <p id="timechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 시간</p>
+            <div id = "timechart_div" style="height: 300px; width: 80%;"></div>
+        </div>
+        <div id = "purposechart" style="float:left; width:40%;margin-top : 20px;margin-bottom : 30px;">
+            <p id="purposechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 목적</p>
+            <div id = "purposechart_div" style="height: 300px; width: 80%;"></div>
+        </div>
+        <div id="oilcost" style="clear:right;float:right;width: 60%; height: 400px; margin-top : 20px; margin-bottom : 30px;">
+            <p style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">유류비 정산금액</p>
+            <table id = "oiltable" style="width: 100%; text-align: center;">
+                <thead>
+                    <th style="width: 20%">이름</th>
+                    <th style="width: 20%">부서</th>
+                    <th style="width: 20%">정산 금액</th>
+                    <th style="width: 20%">정산 날짜</th>                    
+                </thead>
+                <tbody id="oil-tbody"></tbody>
+            </table>
+        </div>
+        <div id = "message" style="float:left;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+        <div id = "message2" style="float:right;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+        <div id="map" style="float:left; width:45%;margin-top : 20px;margin-bottom : 30px;">
+        </div>
+        <div id="map2" style="clear:right;float:right;width: 45%; margin-top : 20px; margin-bottom : 30px;">
+        </div>
+    </body>
+</html>
