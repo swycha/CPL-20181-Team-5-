@@ -1,0 +1,598 @@
+<html>
+    <head>
+        <script src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+        </script>
+        <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgdDp3-ZOkGRRq1zekO9XcnDu_LHekzzU&libraries=visualization&callback=callb">
+        </script>
+        <script>
+            function callb(){}
+            var comseq;
+            var stdate, endate;
+        
+            var mcOptionsr = {
+                  gridSize: 20,
+                  maxZoom: 15,
+                  styles: [{
+                      height: 53,
+                      url: "markr_1.png",
+                      width: 53
+                  },
+                  {
+                      height: 56,
+                      url: "markr_2.png",
+                      width: 56
+                  },
+                  {
+                      height: 66,
+                      url: "markr_3.png",
+                      width: 66
+                  },
+                  {
+                      height: 78,
+                      url: "markr_4.png",
+                      width: 78
+                  },
+                  {
+                      height: 90,
+                      url: "markr_5.png",
+                      width: 90
+                  }]
+              };
+        
+            var mcOptionsb = {
+                gridSize: 20,
+                maxZoom: 15,
+                styles: [{
+                    height: 53,
+                    url: "markb_1.png",
+                    width: 53
+                },
+                {
+                    height: 56,
+                    url: "markb_2.png",
+                    width: 56
+                },
+                {
+                    height: 66,
+                    url: "markb_3.png",
+                    width: 66
+                },
+                {
+                    height: 78,
+                    url: "markb_4.png",
+                    width: 78
+                },
+                {
+                    height: 90,
+                    url: "markb_5.png",
+                    width: 90
+                }] 
+            };
+            
+            
+            function combutclicked(){
+                comseq=document.getElementById("comseq").value;
+                stdate=document.getElementById("stdate").value;
+                endate=document.getElementById("endate").value;
+
+                $.ajax({
+                    type:"POST",
+                    url:"carbizpurdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "method" : "init"},
+                    dataType:"json",
+                    async: false,
+                    success: function(initres){
+                        parse(initres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+                $.ajax({
+                    type:"POST",
+                    url:"carbizpurdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "method" : "empcnt"},
+                    dataType:"json",
+                    async: false,
+                    success: function(cntres){
+                        parseempcnt(cntres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+                
+                $.ajax({
+                    type:"POST",
+                    url:"carbizpurdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "method" : "emp"},
+                    dataType:"json",
+                    async: false,
+                    success: function(empres){
+                        emparse(empres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+         
+                document.getElementById("comseq").value=null;
+                document.getElementById("stdate").value=null;
+                document.getElementById("endate").value=null;
+            }
+            
+            var emplist=[], i;
+            var emppur;
+            function parseempcnt(cntres){
+                $.each(cntres, function(i,obj){
+                    emplist.push(obj.name);
+                });
+                
+                
+                emppur=new Array(parseInt(emplist.length));
+
+                for(i=0;i<parseInt(emplist.length);i++)
+                    emppur[i]=Array.apply(null, new Array(4)).map(Number.prototype.valueOf,0);
+                
+            }
+            
+            
+            var day;
+            var totdis=[0,0,0,0];
+            var tottime=[0,0,0,0];
+            var cumtime=[];
+            var yoil=new Array(4);
+            
+            for(i=0;i<4;i++)
+                yoil[i]=Array.apply(null, new Array(7)).map(Number.prototype.valueOf,0);
+            
+            function emparse(empres){
+                var index;
+                $.each(empres, function(i,obj){
+                    index=emplist.indexOf(obj.name);
+
+                    switch(obj.purpose){
+                        case "a":
+                            emppur[index][0]+=parseInt(obj.cnt);
+                            break;
+                        case "e":
+                            emppur[index][1]+=parseInt(obj.cnt);
+                            break;
+                        case "g":
+                            emppur[index][2]+=parseInt(obj.cnt);
+                            break;
+                        default:
+                            emppur[index][3]+=parseInt(obj.cnt);
+                            break;
+                    }
+                });
+
+                drawname();
+            }
+            
+            function drawname(){
+                
+                var chartdata1=[], chartdata2=[], chartdata3=[], chartdata4=[];
+                for(i=0;i<parseInt(emplist.length);i++){
+                    chartdata1.push({y: parseInt(emppur[i][0]), label: emplist[i]});
+                    chartdata2.push({y: parseInt(emppur[i][1]), label: emplist[i]});
+                    chartdata3.push({y: parseInt(emppur[i][2]), label: emplist[i]});
+                    chartdata4.push({y: parseInt(emppur[i][3]), label: emplist[i]});
+                }
+                
+                var chart = new CanvasJS.Chart("empchart_div", {
+                animationEnabled: true,
+                axisY: {
+                    title: "운행 횟수",
+                    titleFontSize: 20
+                },
+                toolTip: {
+                    shared: true
+                },
+                legend:{
+                    fontSize:15
+                },
+                data: [{
+                    type: "bar",
+                    showInLegend: true,
+                    name: "일반 업무",
+                    color: "gold",
+                    dataPoints: chartdata1
+                },
+                {
+                    type: "bar",
+                    showInLegend: true,
+                    name: "출/퇴근",
+                    color: "silver",
+                    dataPoints: chartdata2
+                },
+                {
+                    type: "bar",
+                    showInLegend: true,
+                    name: "비업무",
+                    color: "#A57164",
+                    dataPoints: chartdata3
+                },
+                {
+                    type: "bar",
+                    showInLegend: true,
+                    name: "etc",
+                    color: "#FFC19E",
+                    dataPoints: chartdata4
+                }      ]
+            });
+            chart.render();
+            }
+            
+            function parse(initres){
+                //alert("in parse");
+                var col;
+                $.each(initres, function(i,obj){
+                              
+                    switch(obj.purpose){
+                        case "a":
+                            col=0;
+                            break;
+                        case "e":
+                            col=1;
+                            break;
+                        case "g":
+                            col=2;
+                            break;
+                        default:
+                            col=3;
+                            
+                    }
+                    
+                    day=parseInt(obj.day)-1;
+                    totdis[col]+=parseInt(obj.distance);
+                    tottime[col]+=parseInt(obj.time);
+                    yoil[col][day]+=1;
+                });
+                
+                for(i=0;i<4;i++){
+                    cumtime.push(parseInt(tottime[i]/3600)+"시간 "+parseInt((tottime[i]- parseInt(tottime[i]/3600)*3600)/60)+"분");
+                }
+                
+                drawdis();
+                drawtime();
+                drawyoil();
+            }
+            
+            function drawdis(){
+                //document.activeElement("fortest").innerHeight=totdis[0];
+                var chart = new CanvasJS.Chart("cumchart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                    axisY: {
+
+                        title: "거리",
+                        scaleBreaks: {
+                            type: "wavy",
+                            spacing:8,
+                            customBreaks: [{
+                                startValue: 2000,
+                                endValue: 4000
+                            }]
+                        }
+                    },
+                    data: [{        
+                        type: "column",  
+                        dataPoints: [    
+                            {y:totdis[0], label:"일반 업무", indexLabel: totdis[0].toString()},
+                            {y:totdis[1], label:"출/퇴근", indexLabel: totdis[1].toString()},
+                            {y:totdis[2], label:"비업무", indexLabel: totdis[2].toString()},
+                            {y:totdis[3], label:"etc", indexLabel: totdis[3].toString()}
+                        ]
+                    }]
+                });
+                chart.render();
+            }
+            
+            function drawtime(){
+                    var chart = new CanvasJS.Chart("timechart_div", {
+                    animationEnabled: true,
+                    theme: "light2", // "light1", "light2", "dark1", "dark2"
+                    
+                    axisY: {
+
+                        title: "시간",
+                        scaleBreaks: {
+                            type: "wavy",
+                            spacing:8,
+                            customBreaks: [{
+                                startValue: 5000000,
+                                endValue: 7000000
+                            }]
+                        }
+                    },
+                    data: [{        
+                        type: "column",  
+                        dataPoints: [    
+                            {y:tottime[0], label:"일반 업무", indexLabel: cumtime[0]},
+                            {y:tottime[1], label:"출/퇴근", indexLabel: cumtime[1]},
+                            {y:tottime[2], label:"비업무", indexLabel: cumtime[2]},
+                            {y:tottime[3], label:"etc", indexLabel: cumtime[3]}
+                        ]
+                    }]
+                });
+                chart.render();
+            }
+            
+            function drawyoil(){
+                var chart1 = new CanvasJS.Chart("yoilchart1_div", {
+                    animationEnabled: true,
+                    title:{
+                        text: "일반업무",
+                        fontSize: 15,
+                        horizontalAlign: "center"
+                    },
+                    data: [{
+                        type: "doughnut",
+                        startAngle: 60,
+                        radius:80,
+                        //innerRadius: 60,
+                        indexLabelFontSize: 13,
+                        indexLabel: "{label} - #percent%",
+                        toolTipContent: "<b>{label}:</b> {y} (#percent%)",
+                        dataPoints: [
+                            { y: yoil[0][1], label: "월" },
+                            { y: yoil[0][2], label: "화" },
+                            { y: yoil[0][3], label: "수" },
+                            { y: yoil[0][4], label: "목"},
+                            { y: yoil[0][5], label: "금"},
+                            { y: yoil[0][6], label: "토"},
+                            { y: yoil[0][0], label: "일"}
+                        ]
+                    }]
+                });
+                var chart2 = new CanvasJS.Chart("yoilchart2_div", {
+                    animationEnabled: true,
+                    title:{
+                        text: "출/퇴근",
+                        fontSize: 15,
+                        horizontalAlign: "center"
+                    },
+                    data: [{
+                        type: "doughnut",
+                        startAngle: 60,
+                        radius:80,
+                        //innerRadius: 60,
+                        indexLabelFontSize: 13,
+                        indexLabel: "{label} - #percent%",
+                        toolTipContent: "<b>{label}:</b> {y} (#percent%)",
+                        dataPoints: [
+                            { y: yoil[1][1], label: "월" },
+                            { y: yoil[1][2], label: "화" },
+                            { y: yoil[1][3], label: "수" },
+                            { y: yoil[1][4], label: "목"},
+                            { y: yoil[1][5], label: "금"},
+                            { y: yoil[1][6], label: "토"},
+                            { y: yoil[1][0], label: "일"}
+                        ]
+                    }]
+                });
+                var chart3 = new CanvasJS.Chart("yoilchart3_div", {
+                    animationEnabled: true,
+                    title:{
+                        text: "비업무",
+                        fontSize: 15,
+                        horizontalAlign: "center"
+                    },
+                    data: [{
+                        type: "doughnut",
+                        startAngle: 60,
+                        radius:80,
+                        //innerRadius: 60,
+                        indexLabelFontSize: 13,
+                        indexLabel: "{label} - #percent%",
+                        toolTipContent: "<b>{label}:</b> {y} (#percent%)",
+                        dataPoints: [
+                            { y: yoil[2][1], label: "월" },
+                            { y: yoil[2][2], label: "화" },
+                            { y: yoil[2][3], label: "수" },
+                            { y: yoil[2][4], label: "목"},
+                            { y: yoil[2][5], label: "금"},
+                            { y: yoil[2][6], label: "토"},
+                            { y: yoil[2][0], label: "일"}
+                        ]
+                    }]
+                });
+                var chart4 = new CanvasJS.Chart("yoilchart4_div", {
+                    animationEnabled: true,
+                    title:{
+                        text: "etc",
+                        fontSize: 15,
+                        horizontalAlign: "center"
+                    },
+                    data: [{
+                        type: "doughnut",
+                        startAngle: 60,
+                        radius:80,
+                        //innerRadius: 60,
+                        indexLabelFontSize: 13,
+                        indexLabel: "{label} - #percent%",
+                        toolTipContent: "<b>{label}:</b> {y} (#percent%)",
+                        dataPoints: [
+                            { y: yoil[3][1], label: "월" },
+                            { y: yoil[3][2], label: "화" },
+                            { y: yoil[3][3], label: "수" },
+                            { y: yoil[3][4], label: "목"},
+                            { y: yoil[3][5], label: "금"},
+                            { y: yoil[3][6], label: "토"},
+                            { y: yoil[3][0], label: "일"}
+                        ]
+                    }]
+                });
+                
+                chart1.render();
+                chart2.render();
+                chart3.render();
+                chart4.render();
+            }
+            
+            function stdsclicked(){
+                
+                var puroption=document.getElementById("stdsoption").selectedIndex;
+                var purpose;
+                //alert(puroption);
+                switch(puroption){
+                    case 1:
+                        purpose = "=\"a\"";
+                        //alert("11");
+                        break;
+                    case 2:
+                        purpose="=\"e\"";
+                        break;
+                    case 3:
+                        purpose="=\"g\"";
+                        break;
+                    case 4:
+                        purpose="!=\"a\" and purpose!=\"e\" and purpose!=\"g\"";
+                        break;
+                    
+                }
+                //alert(purpose);
+                
+                $.ajax({
+                    type:"POST",
+                    url:"carbizpurdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "purpose" : purpose,"method" : "stds"},
+                    dataType:"json",
+                    success: function(stdsres){
+                        parsestds(stdsres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
+            }
+            
+            var start=[],stop=[];
+            var temp1,temp2;
+            
+            function parsestds(stdsres){
+                $.each(stdsres, function(i,obj){
+                  if(!Number.isInteger(parseFloat(obj.startLatitude))&&!Number.isInteger(parseFloat(obj.startLongitude))&&!Number.isInteger(parseFloat(obj.stopLongitude))&&!Number.isInteger(parseFloat(obj.stopLatitude)))
+                   {
+                       temp1=new google.maps.LatLng(parseFloat(obj.startLatitude), parseFloat(obj.startLongitude));
+                       start.push(temp1);
+                       temp2=new google.maps.LatLng(parseFloat(obj.stopLatitude), parseFloat(obj.stopLongitude));
+                       stop.push(temp2);
+                   }
+                });
+                initMap();
+            }
+            
+            function initMap() {
+                
+                document.getElementById("message").innerHTML="출발지";
+                document.getElementById("message2").innerHTML="도착지";
+                
+                var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {lat: 36.322714, lng: 127.999915}
+                });
+                var redmarker = "markerr.png";
+                var markersr = start.map(function(location,i){
+                    return new google.maps.Marker({
+                      position: location,
+                      icon : redmarker
+                });
+                });
+              var markerClusterr = new MarkerClusterer(map, markersr,mcOptionsr);
+              var map2 = new google.maps.Map(document.getElementById('map2'), {
+                  zoom: 8,
+                  center: {lat: 36.322714, lng: 127.999915}
+              });
+              var bluemarker = "markerb.png";
+              var markerdr = stop.map(function(location,i){
+                  return new google.maps.Marker({
+                    position: location,
+                    icon : bluemarker
+              });
+              });
+              var markerClusterb = new MarkerClusterer(map2, markerdr,mcOptionsb);
+          }
+            
+            
+        </script>
+    </head>
+    
+    <body>
+        <style>
+            #map {
+              height: 600px;
+              width: 1000px;
+            }
+            #map2 {
+              height: 600px;
+              width: 1000px;
+            }
+            html, body {
+              height: 100%;
+              margin: 0;
+              padding: 0;
+            }
+        </style>
+        
+        <div id="insert">
+            <form onsubmit="return false">
+                <input type="number" id="comseq" placeholder="회사번호" required=TRUE name="comseq" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                시작일
+                <input type="date" id="stdate" required=TRUE name="stdate" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                최종일?
+                <input type="date" id="endate" required=TRUE name="endate" "if (event.keyCode == 13)
+                        document.getElementById('combut').click()">
+                <input type="button" id="combut" value="클릭" onclick="combutclicked()">
+            </form>
+        </div>
+        <p id="fortest"></p>
+        <div id = "cumchart" style="float:left; width:50%;margin-top : 20px;margin-bottom : 30px;">
+            <p id="cumchart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 누적</p>
+            <div id="cumchart_div" style="height: 300px; width: 80%;"></div>
+        </div>
+        <div id = "timechart" style="clear:right;float:right;width:50%;margin-top : 20px; margin-bottom : 30px;">
+            <p id="timechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 시간</p>
+            <div id = "timechart_div" style="height: 300px; width: 80%;"></div>
+        </div>
+
+        <div id="stds" style="float: left;width: 100%;">
+            <select id="stdsoption" onchange="stdsclicked()" >
+                <option>--선택--</option>
+                <option>일반 업무</option>
+                <option>출/퇴근</option>
+                <option>비업무</option>
+                <option>etc</option>
+            </select>
+            <p></p>
+            <div id = "message" style="float:left;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+            <div id = "message2" style="float:right;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+            <div id = "map" style="float:left;width:43%;height:700px;padding : 20px;">출발</div>
+            <div id = "map2" style="clear:right;float:right;width:43%;height:700px;padding : 20px;">도착</div>
+        </div>
+        <div id = "yoilchart" style="padding: 20px; width: 100%;">
+            <p id="yoilchart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">요일별</p>
+            <div id = "yoilchart1_div" style="padding:10px;height: 300px; width: 20%; float: left;"></div>
+            <div id = "yoilchart2_div" style="padding:10px;height: 300px; width: 20%; float: left;"></div>
+            <div id = "yoilchart3_div" style="padding:10px;height: 300px; width: 20%; float: left;"></div>
+            <div id = "yoilchart4_div" style="padding:10px;height: 300px; width: 20%; float:left;"></div>
+            <div></div>
+        </div>
+        <div id="emp" style="padding: 20px;float: left; width: 100%;">
+            <p style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">직원별</p>
+            <div id = "empchart_div" style="height: 500px; width: 80%;"></div>
+        </div>
+    </body>
+</html>
