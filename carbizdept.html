@@ -3,53 +3,79 @@
         <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
         <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+        </script>
+        <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgdDp3-ZOkGRRq1zekO9XcnDu_LHekzzU&libraries=visualization&callback=callb">
+        </script>
         <script>
             var comseq;
             var stdate, endate;
             var selectItem;
             var deptseq=[];
             
-            function change(clicked_id){
-                switch(clicked_id){
-                    case "1":
-                        $("#cumchart").show();
-                        $("#timechart").show();
-                        $("#purposechart").show();
-                        $("#start").hide();
-                        $("#desti").hide();
-                        $("#emp").hide();
-                        $("#oilcost").hide();
-                        break;
-                    case "2":
-                        $("#cumchart").hide();
-                        $("#timechart").hide();
-                        $("#purposechart").hide();
-                        $("#start").show();
-                        $("#desti").show();
-                        $("#emp").hide();
-                        $("#oilcost").hide();
-                        break;
-                    case "3":
-                        $("#cumchart").hide();
-                        $("#timechart").hide();
-                        $("#purposechart").hide();
-                        $("#start").hide();
-                        $("#desti").hide();
-                        $("#emp").show();
-                        $("#oilcost").hide();
-                        break;
-                    case "4":
-                        $("#cumchart").hide();
-                        $("#timechart").hide();
-                        $("#purposechart").hide();
-                        $("#start").hide();
-                        $("#desti").hide();
-                        $("#emp").hide();
-                        $("#oilcost").show();
-                }
+            var mcOptionsr = {
+                  gridSize: 20,
+                  maxZoom: 15,
+                  styles: [{
+                      height: 53,
+                      url: "markr_1.png",
+                      width: 53
+                  },
+                  {
+                      height: 56,
+                      url: "markr_2.png",
+                      width: 56
+                  },
+                  {
+                      height: 66,
+                      url: "markr_3.png",
+                      width: 66
+                  },
+                  {
+                      height: 78,
+                      url: "markr_4.png",
+                      width: 78
+                  },
+                  {
+                      height: 90,
+                      url: "markr_5.png",
+                      width: 90
+                  }]
+              };
+        
+            var mcOptionsb = {
+                gridSize: 20,
+                maxZoom: 15,
+                styles: [{
+                    height: 53,
+                    url: "markb_1.png",
+                    width: 53
+                },
+                {
+                    height: 56,
+                    url: "markb_2.png",
+                    width: 56
+                },
+                {
+                    height: 66,
+                    url: "markb_3.png",
+                    width: 66
+                },
+                {
+                    height: 78,
+                    url: "markb_4.png",
+                    width: 78
+                },
+                {
+                    height: 90,
+                    url: "markb_5.png",
+                    width: 90
+                }] 
+            };
                 
-            }
             
+            function callb(){}
             function combutclicked(){
                 comseq=document.getElementById("comseq").value;
                 stdate=document.getElementById("stdate").value;
@@ -135,6 +161,19 @@
                     }
 
                 });
+                $.ajax({
+                    type:"POST",
+                    url:"carbizdeptdata.php",
+                    data:{"comseq" : comseq, "stdate" : stdate, "endate" : endate, "dept": selectItem,"method" : "stds"},
+                    dataType:"json",
+                    success: function(stdsres){
+                        parsestds(stdsres);                    
+                    },
+                    fail:function(){
+                        alert("chart load fail");
+                    }
+
+                });
                 //alert(selectItem);
             }
             
@@ -208,6 +247,53 @@
                     
                 });
             }
+            
+            var start=[],stop=[];
+            var temp1,temp2;
+            
+            function parsestds(stdsres){
+                $.each(stdsres, function(i,obj){
+                  if(!Number.isInteger(parseFloat(obj.startLatitude))&&!Number.isInteger(parseFloat(obj.startLongitude))&&!Number.isInteger(parseFloat(obj.stopLongitude))&&!Number.isInteger(parseFloat(obj.stopLatitude)))
+                   {
+                       temp1=new google.maps.LatLng(parseFloat(obj.startLatitude), parseFloat(obj.startLongitude));
+                       start.push(temp1);
+                       temp2=new google.maps.LatLng(parseFloat(obj.stopLatitude), parseFloat(obj.stopLongitude));
+                       stop.push(temp2);
+                   }
+                });
+                initMap();
+            }
+            
+            function initMap() {
+                
+                document.getElementById("message").innerHTML="출발지";
+                document.getElementById("message2").innerHTML="도착지";
+                
+                var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {lat: 36.322714, lng: 127.999915}
+                });
+                var redmarker = "markerr.png";
+                var markersr = start.map(function(location,i){
+                    return new google.maps.Marker({
+                      position: location,
+                      icon : redmarker
+                });
+                });
+              var markerClusterr = new MarkerClusterer(map, markersr,mcOptionsr);
+              var map2 = new google.maps.Map(document.getElementById('map2'), {
+                  zoom: 8,
+                  center: {lat: 36.322714, lng: 127.999915}
+              });
+              var bluemarker = "markerb.png";
+              var markerdr = stop.map(function(location,i){
+                  return new google.maps.Marker({
+                    position: location,
+                    icon : bluemarker
+              });
+              });
+              var markerClusterb = new MarkerClusterer(map2, markerdr,mcOptionsb);
+          }
             
             function drawname(){
                 var chart = new CanvasJS.Chart("empchart_div", {
@@ -368,10 +454,6 @@
             </form>
             <select id="seldept" style="display: none;" onchange="selclicked()"><option></option></select>
         </div>
-        <button id="1" onclick="change(this.id)">1</button>
-        <button id="2" onclick="change(this.id)">2</button>
-        <button id="3" onclick="change(this.id)">3</button>
-        <button id="4" onclick="change(this.id)">4</button>
         <p id="fortest"></p>
         <div id = "cumchart" style="float:left; width:50%;margin-top : 20px;margin-bottom : 30px;">
             <p id="cumchart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 누적</p>
@@ -385,9 +467,9 @@
             <p id="purposechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 목적</p>
             <div id = "purposechart_div" style="height: 300px; "></div>
         </div>
-        <div id="oilcost" style="clear:right;float:right;width: 70%; margin-top : 20px; margin-bottom : 30px;">
+        <div id="oilcost" style="clear:right;float:right;width: 70%; height: 400px; margin-top : 20px; margin-bottom : 30px;">
             <p style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">유류비 정산금액</p>
-            <table id = "oiltable" style="width: 100%;text-align: center;">
+            <table id = "oiltable" style="width: 100%; text-align: center;">
                 <thead>
                     <th style="width: 20%">이름</th>
                     <th style="width: 20%">부서</th>
@@ -398,15 +480,15 @@
             </table>
             
         </div>
-        <div id="start" style="padding: 20px;float: left; display: none;">
-            <p>출발</p>
+        <div id = "message" style="float:left;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+        <div id = "message2" style="float:right;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+        <div id="map" style="float:left; width:45%;margin-top : 20px;margin-bottom : 30px;">
         </div>
-        <div id="desti" style="padding: 20px; display: none;">
-            <p>도착</p>
+        <div id="map2" style="clear:right;float:right;width: 45%; margin-top : 20px; margin-bottom : 30px;">
         </div>
-        <div id="emp" style="padding: 20px; display: none;">
-            <p>직원별</p>
-            <div id = "empchart_div" style="height: 500px; width: 80%;"></div>
+        <div id="emp" style="float:left; width:100%;margin-top : 20px;margin-bottom : 30px;">
+            <p id="emptitle" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">직원별</p>
+            <div id = "empchart_div" style="height: 400px; margin: auto; width: 60%;" ></div>
         </div>
         
     </body>

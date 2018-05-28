@@ -14,6 +14,8 @@ switch($_POST["method"]){
     case "oil":
         $sql="select o.cost as ocost, u.name as uname, o.userUid, o.createTime as odate from oilCostPaid o inner JOIN user u on o.userUid = u.uid where cost>0 and u.companySeq=\"".$_POST["comseq"]."\" and \"".$_POST["stdate"]."\"<=o.createTime and o.createTime<=\"".$_POST["endate"]."\" and u.departmentSeq = \"".$_POST["dept"]."\" and 0<o.distance and o.distance<1000";
         break;
+    case "stds":
+        $sql="select startLatitude, startLongitude, stopLatitude, stopLongitude from drivingLog where companySeq=\"".$_POST["comseq"]."\" and \"".$_POST["stdate"]."\"<=startDate and startDate<=\"".$_POST["endate"]."\" and 0<distance and distance<1000 and departmentName = \"".$_POST["dept"]."\"";
 }
 
 $stmt=$conn->prepare($sql);
