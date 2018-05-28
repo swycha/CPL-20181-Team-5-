@@ -1,0 +1,465 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <script src = "http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script type="text/javascript" src = "https://www.gstatic.com/charts/loader.js"></script>
+  <script>
+
+  function clicked(){
+
+          var start=document.getElementById("start").value;
+          var des=document.getElementById("des").value;
+
+          document.getElementById("title").innerHTML="운행목적";
+
+          $.ajax({
+                  type:"POST",
+                  url:"SelectPeriod.php",
+                  data:{"start" : start, "des" : des},
+                  dataType:"json",
+
+                  success:function(res){
+                      succ(res);
+                      drawDrivingCumChart(res);
+                      drawDrivingTimeChart(res);
+                      drawDrivingPurposeChart2(res);
+              },
+
+              fail:function(){
+                  alert("fail");
+              }
+              });
+
+              function drawDrivingCumChart(res){
+
+                  var dis=[0,0,0,0,0,0,0];
+                  $.each(res, function(i,obj){
+
+                      dis[parseInt(obj.day)-1]+=parseInt(obj.distance);
+
+                  });
+
+                  var chart = new CanvasJS.Chart("chartContainer", {
+                      animationEnabled: true,
+                      theme: "light2", // "light1", "light2", "dark1", "dark2"
+                      title:{
+                          text: "운행누적"
+                      },
+                      axisY: {
+                          title: "거리",
+                        scaleBreaks: {
+                              type: "wavy",
+                              customBreaks: [{
+                                  startValue: 5000,
+                                  endValue: 10000
+                                  }
+                          ]}
+                      },
+                      data: [{
+                          type: "column",
+                          showInLegend: false,
+                          legendMarkerColor: "grey",
+                          //legendText: "MMbbl = one million barrels",
+                          dataPoints: [
+
+                              { y: dis[0], label: "월"  },
+                              { y: dis[1],  label: "화" },
+                              { y: dis[2],  label: "수" },
+                              { y: dis[3],  label: "목" },
+                              { y: dis[4],  label: "금" },
+                              { y: dis[5], label: "토" },
+                              { y: dis[6],  label: "일" }
+                          ]
+                      }]
+                  });
+                  chart.render();
+
+              }
+
+              function drawDrivingTimeChart(res){
+
+                  var day=[0,0,0,0,0,0,0];
+                  var cumtime=[];
+                  var weeknum;
+
+                  $.each(res, function(i,obj){
+
+                    if(parseInt(obj.distance)>0){
+                        day[parseInt(obj.day)-1]+=parseInt(obj.tottime);
+                    }
+
+                  });
+                 // window.onload = function () {
+                 var i;
+                 for(i=0;i<7;i++){
+                     cumtime.push(parseInt(day[i]/3600)+"시간 "+parseInt((day[i]-parseInt(day[i]/3600)*3600)/60)+"분");
+                 }
+
+                  var chart = new CanvasJS.Chart("chartContainer2", {
+                      animationEnabled: true,
+                      theme: "light2", // "light1", "light2", "dark1", "dark2"
+                      title:{
+                          text: "운행시간"
+                      },
+                      axisY: {
+                          title: "시간",
+                        scaleBreaks: {
+                            type: "wavy",
+                              customBreaks: [{
+                                  startValue: 1200,
+                                  endValue: 21000
+                                  }]
+                              }
+                      },
+                      data: [{
+                          type: "column",
+                          showInLegend: false,
+                          legendMarkerColor: "grey",
+                          dataPoints: [
+
+                              { y: day[0]/3600, label: "월" , indexLabel : cumtime[0]},
+                              { y: day[1]/3600, label: "화" , indexLabel : cumtime[1]},
+                              { y: day[2]/3600, label: "수" , indexLabel : cumtime[2]},
+                              { y: day[3]/3600, label: "목" , indexLabel : cumtime[3]},
+                              { y: day[4]/3600, label: "금" , indexLabel : cumtime[4]},
+                              { y: day[5]/3600, label: "토" , indexLabel : cumtime[5]},
+                              { y: day[6]/3600, label: "일" , indexLabel : cumtime[6]}
+                          ]
+                      }]
+                  });
+                  chart.render();
+              }
+
+          function drawDrivingPurposeChart2(res){
+
+            var day=new Array(7);
+            var i;
+            //day[0]=['요일', '일반 업무', '출/퇴근', '비업무', 'etc'];
+            for(i =0;i<7;i++){
+                day[i]=Array.apply(null, new Array(4)).map(Number.prototype.valueOf,0);
+            }
+
+              $.each(res, function(i,obj){
+
+                if(parseInt(obj.distance)>0){
+                    switch(obj.purpose){
+                        case "a":
+                            col=0;
+                            break;
+                        case "e":
+                            col=1;
+                            break;
+                        case "g":
+                            col=2;
+                            break;
+                        default:
+                            col=3;
+
+                        }
+
+                    day[parseInt(obj.day)-1][col]+=1;
+                }
+
+              });
+             var chart = new CanvasJS.Chart("chartContainer4", {
+          	theme: "light2", // "light1", "light2", "dark1", "dark2"
+          	exportEnabled: true,
+          	animationEnabled: true,
+          	title: {
+          		text: "월"
+          	},
+          	data: [{
+          		type: "pie",
+          		startAngle: 25,
+          		toolTipContent: "{label}: {y}%",
+          		showInLegend: "true",
+          		legendText: "{label}",
+          		indexLabelFontSize: 13,
+          		indexLabel: "{label} - {y}%",
+          		dataPoints: [
+          			{ y: day[0][0], label: "일반 업무" },
+          			{ y: day[0][1], label: "출/퇴근" },
+          			{ y: day[0][2], label: "비업무" },
+          			{ y: day[0][3], label: "etc" }
+          		]
+          	}]
+          });
+          var chart2 = new CanvasJS.Chart("chartContainer5", {
+          theme: "light2", // "light1", "light2", "dark1", "dark2"
+          exportEnabled: true,
+          animationEnabled: true,
+          title: {
+           text: "화"
+          },
+          data: [{
+           type: "pie",
+           startAngle: 25,
+           toolTipContent: "{label}: {y}%",
+           showInLegend: "true",
+           legendText: "{label}",
+           indexLabelFontSize: 13,
+           indexLabel: "{label} - {y}%",
+           dataPoints: [
+             { y: day[1][0], label: "일반 업무" },
+             { y: day[1][1], label: "출/퇴근" },
+             { y: day[1][2], label: "비업무" },
+             { y: day[1][3], label: "etc" }
+           ]
+          }]
+          });
+          var chart3 = new CanvasJS.Chart("chartContainer6", {
+          theme: "light2", // "light1", "light2", "dark1", "dark2"
+          exportEnabled: true,
+          animationEnabled: true,
+          title: {
+           text: "수"
+          },
+          data: [{
+           type: "pie",
+           startAngle: 25,
+           toolTipContent: "{label}: {y}%",
+           showInLegend: "true",
+           legendText: "{label}",
+           indexLabelFontSize: 13,
+           indexLabel: "{label} - {y}%",
+           dataPoints: [
+             { y: day[2][0], label: "일반 업무" },
+             { y: day[2][1], label: "출/퇴근" },
+             { y: day[2][2], label: "비업무" },
+             { y: day[2][3], label: "etc" }
+           ]
+          }]
+          });
+          var chart4 = new CanvasJS.Chart("chartContainer7", {
+          theme: "light2", // "light1", "light2", "dark1", "dark2"
+          exportEnabled: true,
+          animationEnabled: true,
+          title: {
+           text: "목"
+          },
+          data: [{
+           type: "pie",
+           startAngle: 25,
+           toolTipContent: "{label}: {y}%",
+           showInLegend: "true",
+           legendText: "{label}",
+           indexLabelFontSize: 13,
+           indexLabel: "{label} - {y}%",
+           dataPoints: [
+             { y: day[3][0], label: "일반 업무" },
+             { y: day[3][1], label: "출/퇴근" },
+             { y: day[3][2], label: "비업무" },
+             { y: day[3][3], label: "etc" }
+           ]
+          }]
+          });
+          var chart5 = new CanvasJS.Chart("chartContainer8", {
+          theme: "light2", // "light1", "light2", "dark1", "dark2"
+          exportEnabled: true,
+          animationEnabled: true,
+          title: {
+           text: "금"
+          },
+          data: [{
+           type: "pie",
+           startAngle: 25,
+           toolTipContent: "{label}: {y}%",
+           showInLegend: "true",
+           legendText: "{label}",
+           indexLabelFontSize: 13,
+           indexLabel: "{label} - {y}%",
+           dataPoints: [
+             { y: day[4][0], label: "일반 업무" },
+             { y: day[4][1], label: "출/퇴근" },
+             { y: day[4][2], label: "비업무" },
+             { y: day[4][3], label: "etc" }
+           ]
+          }]
+          });
+          var chart6 = new CanvasJS.Chart("chartContainer9", {
+          theme: "light2", // "light1", "light2", "dark1", "dark2"
+          exportEnabled: true,
+          animationEnabled: true,
+          title: {
+           text: "토"
+          },
+          data: [{
+           type: "pie",
+           startAngle: 25,
+           toolTipContent: "{label}: {y}%",
+           showInLegend: "true",
+           legendText: "{label}",
+           indexLabelFontSize: 13,
+           indexLabel: "{label} - {y}%",
+           dataPoints: [
+             { y: day[5][0], label: "일반 업무" },
+             { y: day[5][1], label: "출/퇴근" },
+             { y: day[5][2], label: "비업무" },
+             { y: day[5][3], label: "etc" }
+           ]
+          }]
+          });
+          var chart7 = new CanvasJS.Chart("chartContainer10", {
+          theme: "light2", // "light1", "light2", "dark1", "dark2"
+          exportEnabled: true,
+          animationEnabled: true,
+          title: {
+           text: "일"
+          },
+          data: [{
+           type: "pie",
+           startAngle: 25,
+           toolTipContent: "{label}: {y}%",
+           showInLegend: "true",
+           legendText: "{label}",
+           indexLabelFontSize: 13,
+           indexLabel: "{label} - {y}%",
+           dataPoints: [
+             { y: day[6][0], label: "일반 업무" },
+             { y: day[6][1], label: "출/퇴근" },
+             { y: day[6][2], label: "비업무" },
+             { y: day[6][3], label: "etc" }
+           ]
+          }]
+          });
+          chart.render();
+          chart2.render();
+          chart3.render();
+          chart4.render();
+          chart5.render();
+          chart6.render();
+          chart7.render();
+          }
+
+              var start=[],stop=[];
+              var temp1,temp2;
+
+              function succ(result){
+
+                  $.each(result, function(i,obj){
+
+                  if(parseInt(obj.distance)>0&&!Number.isInteger(parseFloat(obj.startLatitude))&&!Number.isInteger(parseFloat(obj.startLongitude))&&!Number.isInteger(parseFloat(obj.stopLongitude))&&!Number.isInteger(parseFloat(obj.stopLatitude)))
+                   {
+                       temp1=new google.maps.LatLng(parseFloat(obj.startLatitude), parseFloat(obj.startLongitude));
+                       start.push(temp1);
+                       temp2=new google.maps.LatLng(parseFloat(obj.stopLatitude), parseFloat(obj.stopLongitude));
+                       stop.push(temp2);
+                   }
+                });
+                  initMap();
+              }
+
+            function initMap() {
+
+                document.getElementById("message").innerHTML="출발지";
+                document.getElementById("message2").innerHTML="도착지";
+
+              var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 8,
+                center: {lat: 36.322714, lng: 127.999915}
+              });
+                var redmarker = "markerr.png";
+                var markersr = start.map(function(location,i){
+                    return new google.maps.Marker({
+                      position: location,
+                      icon : redmarker
+                });
+                });
+
+              var markerClusterr = new MarkerClusterer(map, markersr,mcOptionsr);
+
+              var map2 = new google.maps.Map(document.getElementById('map2'), {
+                  zoom: 8,
+                  center: {lat: 36.322714, lng: 127.999915}
+              });
+
+              var bluemarker = "markerb.png";
+              var markerdr = stop.map(function(location,i){
+                  return new google.maps.Marker({
+                    position: location,
+                    icon : bluemarker
+              });
+              });
+
+              var markerClusterb = new MarkerClusterer(map2, markerdr,mcOptionsr);
+          }
+
+          var mcOptionsr = {
+              gridSize: 20,
+              maxZoom: 15,
+              styles: [{
+                  height: 53,
+                  url: "markr_1.png",
+                  width: 53
+              },
+              {
+                  height: 56,
+                  url: "markr_2.png",
+                  width: 56
+              },
+              {
+                  height: 66,
+                  url: "markr_3.png",
+                  width: 66
+              },
+              {
+                  height: 78,
+                  url: "markr_4.png",
+                  width: 78
+              },
+              {
+                  height: 90,
+                  url: "markr_5.png",
+                  width: 90
+              }]
+          };
+        }
+  </script>
+</head>
+
+    <body>
+      <form>
+              <input type="date" placeholder="출발" id="start">
+              <b>~</b>
+              <input type="date" placeholder="도착" id="des">
+              <input type="button" value="click" onclick="clicked()">
+      </form>
+      <div id ="chartContainer" style="float:left; width:50%;height:300px; margin-top : 20px;margin-bottom : 30px;" ></div>
+      <div id ="chartContainer2" style="clear:right;float:right;width:50%;height:300px; margin-top : 20px; margin-bottom : 30px;" ></div>
+
+      <div id = "message" style="float:left;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+      <div id = "message2" style="clear:right;float:right;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>
+      <div id = "map" style="float:left;width:50%;height:800px;margin-bottom : 30px;"></div>
+      <div id = "map2" style="clear:right;float:right;width:50%;height:800px;margin-bottom : 30px;"></div>
+      <div id ="title" style="font:bold 1.6em/1.0em 돋음체;text-align:center; margin-top :80px; margin-bottom :20px"></div>
+      <div id ="chartContainer4" style="height: 300px; float:left; width: 14%;"></div>
+      <div id ="chartContainer5" style="height: 300px; float:left; width: 14%;"></div>
+      <div id ="chartContainer6" style="height: 300px; float:left; width: 14%;"></div>
+      <div id ="chartContainer7" style="height: 300px; float:left; width: 14%;"></div>
+      <div id ="chartContainer8" style="height: 300px; float:left; width: 14%;"></div>
+      <div id ="chartContainer9" style="height: 300px; float:left; width: 14%;"></div>
+      <div id ="chartContainer10" style="height: 300px; float:left; width: 14%;"></div>
+          <style>
+            #map {
+              height: 600px;
+              width: 1000px;
+            }
+            #map2 {
+              height: 600px;
+              width: 1000px;
+            }
+            html, body {
+              height: 100%;
+              margin: 0;
+              padding: 0;
+            }
+          </style>
+        <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
+        </script>
+        <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgdDp3-ZOkGRRq1zekO9XcnDu_LHekzzU&libraries=visualization&callback=clicked">
+        </script>
+      </div>
+    </body>
+</html>
