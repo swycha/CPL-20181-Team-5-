@@ -2,6 +2,7 @@
 require_once 'jeydatabase.php';
 
 switch($_POST["method"]){
+        
     case "emp" :
         $sql="select distinct name from drivingLog where name != \"\" and companySeq=\"".$_POST["comseq"]."\" and \"".$_POST["stdate"]."\"<=startDate and startDate<=\"".$_POST["endate"]."\" and 0<distance and distance<1000";
         break; 
