@@ -1,8 +1,9 @@
 <html>
     <head>
-        <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+       <!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>-->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js">
         </script>
         <script async defer
@@ -172,6 +173,11 @@
                 var tbody=document.getElementById("oiltable");
                 var row, cell1, cell2, cell3;
                 
+                var rownum=tbody.rows.length;
+                while(rownum>1){
+                    tbody.deleteRow(rownum-1);
+                    rownum=tbody.rows.length;
+                }
                 $.each(oilres, function(i,obj){
                    
                     row=tbody.insertRow(tbody.rows.length);
@@ -419,16 +425,15 @@
             <p id="purposechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 목적</p>
             <div id = "purposechart_div" style="height: 300px; width: 80%;"></div>
         </div>
-        <div id="oilcost" style="clear:right;float:right;width: 60%; height: 400px; margin-top : 20px; margin-bottom : 30px;">
+        <div id="oilcost" style="overflow: auto; clear:right;float:right;width: 60%; height: 400px; margin-top : 20px; margin-bottom : 30px;">
             <p style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">유류비 정산금액</p>
             <table id = "oiltable" style="width: 100%; text-align: center;">
                 <thead>
                     <th style="width: 20%">이름</th>
-                    <th style="width: 20%">부서</th>
                     <th style="width: 20%">정산 금액</th>
                     <th style="width: 20%">정산 날짜</th>                    
                 </thead>
-                <tbody id="oil-tbody"></tbody>
+                <tbody id="oil_tbody"></tbody>
             </table>
         </div>
         <div id = "message" style="float:left;width:50%;height:30px;text-align:center;font:bold 1.6em/1.0em 돋음체;margin-bottom : 20px;"></div>

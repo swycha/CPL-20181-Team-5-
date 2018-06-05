@@ -232,6 +232,12 @@
                 var tbody=document.getElementById("oiltable");
                 var row, cell1, cell2, cell3, cell4;
                 
+                var rownum=tbody.rows.length;
+                while(rownum>1){
+                    tbody.deleteRow(rownum-1);
+                    rownum=tbody.rows.length;
+                }
+                
                 $.each(oilres, function(i,obj){
                    
                     row=tbody.insertRow(tbody.rows.length);
@@ -255,6 +261,7 @@
                 $.each(stdsres, function(i,obj){
                   if(!Number.isInteger(parseFloat(obj.startLatitude))&&!Number.isInteger(parseFloat(obj.startLongitude))&&!Number.isInteger(parseFloat(obj.stopLongitude))&&!Number.isInteger(parseFloat(obj.stopLatitude)))
                    {
+                       
                        temp1=new google.maps.LatLng(parseFloat(obj.startLatitude), parseFloat(obj.startLongitude));
                        start.push(temp1);
                        temp2=new google.maps.LatLng(parseFloat(obj.stopLatitude), parseFloat(obj.stopLongitude));
@@ -467,7 +474,7 @@
             <p id="purposechart_title" style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">운행 목적</p>
             <div id = "purposechart_div" style="height: 300px; "></div>
         </div>
-        <div id="oilcost" style="clear:right;float:right;width: 70%; height: 400px; margin-top : 20px; margin-bottom : 30px;">
+        <div id="oilcost" style="overflow: auto; clear:right;float:right;width: 70%; height: 400px; margin-top : 20px; margin-bottom : 30px;">
             <p style="margin: 20px; font-family: 'Source Sans Pro';  font-weight:700;">유류비 정산금액</p>
             <table id = "oiltable" style="width: 100%; text-align: center;">
                 <thead>
